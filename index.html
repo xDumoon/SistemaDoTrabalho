@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Clientes</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #3f3f3f; }
+        .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #a1a0a0; }
+    </style>
+</head>
+<body>
+
+    <h1>Lista de Clientes Cadastrados</h1>
+    <div id="lista-clientes">
+        <p>Carregando clientes...</p>
+    </div>
+
+    <script>
+        // Função em JavaScript para buscar os dados na nossa API Python 
+        async function carregarClientes() {
+            try {
+                // Faz o GET na rota que criamos
+                const resposta = await fetch('http://127.0.0.1:8000/clientes/');
+                const clientes = await resposta.json();
+                
+                const divLista = document.getElementById('lista-clientes');
+                divLista.innerHTML = ''; // Limpa o "Carregando..."
+
+                // Passa por cada cliente e cria um "card" na tela
+                clientes.forEach(cliente => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    card.innerHTML = `
+                        <strong>Nome:</strong> ${cliente.nome} <br>
+                        <strong>CPF:</strong> ${cliente.cpf} <br>
+                        <strong>Telefone:</strong> ${cliente.telefone}
+                    `;
+                    divLista.appendChild(card);
+                });
+
+            } catch (erro) {
+                console.error("Erro ao buscar clientes:", erro);
+                document.getElementById('lista-clientes').innerHTML = '<p>Erro ao carregar o sistema.</p>';
+            }
+        }
+
+        // Executa a função assim que a página abre
+        carregarClientes();
+    </script>
+
+</body>
+</html>
