@@ -2,50 +2,220 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Sistema de Clientes</title>
+    <title>Sistema INSS - Painel</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background-color: #3f3f3f; }
+        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f4f4f9; }
+        /* A grid agora se adapta automaticamente ao espaço da tela */
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
         .card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #a1a0a0; }
+        .form-container { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, select { display: block; width: 100%; margin-bottom: 15px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
+        button { color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;}
+        
+        /* Cores diferentes para cada botão de salvar para não confundir visualmente */
+        .btn-cliente { background-color: #28a745; }
+        .btn-cliente:hover { background-color: #218838; }
+        .btn-servico { background-color: #007bff; }
+        .btn-servico:hover { background-color: #0056b3; }
+        .btn-emprestimo { background-color: #ffc107; color: black; }
+        .btn-emprestimo:hover { background-color: #e0a800; }
+        
+        h1, h2 { color: #333; margin-top: 0;}
     </style>
 </head>
 <body>
 
-    <h1>Lista de Clientes Cadastrados</h1>
+    <h1>Painel de Controle</h1>
+
+    <div class="grid-container">
+        <div class="form-container">
+            <h2>1. Cadastrar Novo Cliente</h2>
+            <form id="form-cliente">
+                <label>Nome:</label>
+                <input type="text" id="nome" placeholder="Nome completo" required>
+                
+                <label>CPF:</label>
+                <input type="text" id="cpf" placeholder="Apenas números" required>
+                
+                <label>Telefone:</label>
+                <input type="text" id="telefone" placeholder="(DD) 99999-9999" required>
+                
+                <button type="submit" class="btn-cliente">Salvar Cliente</button>
+            </form>
+        </div>
+
+        <div class="form-container">
+            <h2>2. Adicionar Serviço INSS</h2>
+            <form id="form-servico">
+                <label>Selecione o Cliente:</label>
+                <select id="cliente_id_servico" required>
+                    <option value="">Carregando clientes...</option>
+                </select>
+                
+                <label>Tipo de Serviço:</label>
+                <input type="text" id="tipo_servico" placeholder="Ex: Recuperação de Senha" required>
+                
+                <label>Observações (Opcional):</label>
+                <input type="text" id="observacoes" placeholder="Ex: Senha atual é 123456">
+                
+                <button type="submit" class="btn-servico">Salvar Serviço</button>
+            </form>
+        </div>
+
+        <div class="form-container">
+            <h2>3. Adicionar Empréstimo</h2>
+            <form id="form-emprestimo">
+                <label>Selecione o Cliente:</label>
+                <select id="cliente_id_emprestimo" required>
+                    <option value="">Carregando clientes...</option>
+                </select>
+                
+                <label>Valor (R$):</label>
+                <input type="number" step="0.01" id="valor" placeholder="Ex: 5000.00" required>
+                
+                <label>Banco:</label>
+                <input type="text" id="banco" placeholder="Ex: Itaú, BMG" required>
+                
+                <label>Quantidade de Parcelas:</label>
+                <input type="number" id="parcelas" placeholder="Ex: 84" required>
+                
+                <button type="submit" class="btn-emprestimo">Salvar Empréstimo</button>
+            </form>
+        </div>
+    </div>
+
+    <h2>Clientes Cadastrados</h2>
     <div id="lista-clientes">
         <p>Carregando clientes...</p>
     </div>
 
     <script>
-        // Função em JavaScript para buscar os dados na nossa API Python 
+        // Função para BUSCAR clientes e preencher os dois Dropdowns (Serviços e Empréstimos)
         async function carregarClientes() {
             try {
-                // Faz o GET na rota que criamos
                 const resposta = await fetch('http://127.0.0.1:8000/clientes/');
                 const clientes = await resposta.json();
                 
                 const divLista = document.getElementById('lista-clientes');
-                divLista.innerHTML = ''; // Limpa o "Carregando..."
+                const selectServico = document.getElementById('cliente_id_servico');
+                const selectEmprestimo = document.getElementById('cliente_id_emprestimo');
+                
+                divLista.innerHTML = ''; 
+                selectServico.innerHTML = '<option value="">Escolha um cliente...</option>';
+                selectEmprestimo.innerHTML = '<option value="">Escolha um cliente...</option>';
 
-                // Passa por cada cliente e cria um "card" na tela
                 clientes.forEach(cliente => {
                     const card = document.createElement('div');
                     card.className = 'card';
                     card.innerHTML = `
-                        <strong>Nome:</strong> ${cliente.nome} <br>
-                        <strong>CPF:</strong> ${cliente.cpf} <br>
-                        <strong>Telefone:</strong> ${cliente.telefone}
+                        <strong>ID:</strong> ${cliente.id} | 
+                        <strong>Nome:</strong> ${cliente.nome} | 
+                        <strong>CPF:</strong> ${cliente.cpf}
                     `;
                     divLista.appendChild(card);
-                });
 
+                    // Cria a opção com o nome do cliente
+                    const opcaoServico = document.createElement('option');
+                    opcaoServico.value = cliente.id;
+                    opcaoServico.text = cliente.nome;
+                    selectServico.appendChild(opcaoServico);
+
+                    // Faz a mesma coisa para o dropdown de empréstimos
+                    const opcaoEmprestimo = document.createElement('option');
+                    opcaoEmprestimo.value = cliente.id;
+                    opcaoEmprestimo.text = cliente.nome;
+                    selectEmprestimo.appendChild(opcaoEmprestimo);
+                });
             } catch (erro) {
-                console.error("Erro ao buscar clientes:", erro);
-                document.getElementById('lista-clientes').innerHTML = '<p>Erro ao carregar o sistema.</p>';
+                console.error("Erro:", erro);
+                document.getElementById('lista-clientes').innerHTML = '<p>Erro ao conectar com a API.</p>';
             }
         }
 
-        // Executa a função assim que a página abre
+        // Lógica de Salvar CLIENTE
+        document.getElementById('form-cliente').addEventListener('submit', async function(evento) {
+            evento.preventDefault();
+            const dadosCliente = {
+                nome: document.getElementById('nome').value,
+                cpf: document.getElementById('cpf').value,
+                telefone: document.getElementById('telefone').value
+            };
+
+            try {
+                const resposta = await fetch('http://127.0.0.1:8000/clientes/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosCliente)
+                });
+                if (resposta.ok) {
+                    document.getElementById('form-cliente').reset();
+                    carregarClientes();
+                } else {
+                    alert('Erro: Verifique se este CPF já existe.');
+                }
+            } catch (erro) {
+                alert("Erro de conexão.");
+            }
+        });
+
+        // Lógica de Salvar SERVIÇO
+        document.getElementById('form-servico').addEventListener('submit', async function(evento) {
+            evento.preventDefault();
+            const dadosServico = {
+                cliente_id: parseInt(document.getElementById('cliente_id_servico').value),
+                tipo_servico: document.getElementById('tipo_servico').value,
+                observacoes: document.getElementById('observacoes').value
+            };
+
+            try {
+                const resposta = await fetch('http://127.0.0.1:8000/servicos/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosServico)
+                });
+                if (resposta.ok) {
+                    alert('Serviço cadastrado com sucesso!');
+                    document.getElementById('form-servico').reset();
+                } else {
+                    alert('Erro ao salvar o serviço.');
+                }
+            } catch (erro) {
+                alert("Erro de conexão.");
+            }
+        });
+
+        // Lógica NOVA: Salvar EMPRÉSTIMO
+        document.getElementById('form-emprestimo').addEventListener('submit', async function(evento) {
+            evento.preventDefault();
+            
+            const dadosEmprestimo = {
+                cliente_id: parseInt(document.getElementById('cliente_id_emprestimo').value),
+                // Usamos parseFloat para garantir que os centavos do valor sejam lidos corretamente
+                valor: parseFloat(document.getElementById('valor').value),
+                banco: document.getElementById('banco').value,
+                // Usamos parseInt para garantir que as parcelas sejam enviadas como número inteiro
+                parcelas: parseInt(document.getElementById('parcelas').value)
+            };
+
+            try {
+                const resposta = await fetch('http://127.0.0.1:8000/emprestimos/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(dadosEmprestimo)
+                });
+                
+                if (resposta.ok) {
+                    alert('Empréstimo cadastrado com sucesso!');
+                    document.getElementById('form-emprestimo').reset();
+                } else {
+                    alert('Erro ao salvar o empréstimo.');
+                }
+            } catch (erro) {
+                alert("Erro de conexão.");
+            }
+        });
+
+        // Inicia a aplicação
         carregarClientes();
     </script>
 

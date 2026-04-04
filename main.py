@@ -70,6 +70,16 @@ class ClienteCreate(BaseModel):
     nome: str
     cpf: str
     telefone: str
+class ServicoCreate(BaseModel):
+    cliente_id: int
+    tipo_servico: str
+    observacoes: str | None = None  # opcional
+
+class EmprestimoCreate(BaseModel):
+    cliente_id: int
+    valor: float
+    banco: str
+    parcelas: int
 
 # Função auxiliar para abrir e fechar a conexão com o banco a cada requisição
 def get_db():
@@ -91,5 +101,29 @@ def cadastrar_cliente(cliente: ClienteCreate, db: Session = Depends(get_db)):
 @app.get("/clientes/")
 def listar_clientes(db: Session = Depends(get_db)):
     # Faz um SELECT * FROM clientes
-    clientes = db.query(ClienteDB).all()
-    return clientes
+    return db.query(ClienteDB).all()
+
+# ROTAS PARA SERVIÇOS INSS
+
+@app.post("/servicos/")
+def cadastrar_servico(servico: ServicoCreate, db: Session = Depends(get_db)):
+    novo_servico = ServicoDB(**servico.dict()) # Esse atalho pega todos os campos do Pydantic de uma vez
+    db.add(novo_servico)
+    db.commit()
+    db.refresh(novo_servico)
+    return novo_servico
+
+@app.get("/clientes/{cliente_id}/servicos/")
+def listar_servicos_do_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    # Busca apenas os serviços onde o ID do cliente é igual ao que passamos na URL
+    return db.query(ServicoDB).filter(ServicoDB.cliente_id == cliente_id).all()
+
+# ROTAS PARA EMPRÉSTIMOS
+
+@app.post("/emprestimos/")
+def cadastrar_emprestimo(emprestimo: EmprestimoCreate, db: Session = Depends(get_db)):
+    novo_emprestimo = EmprestimoDB(**emprestimo.dict())
+    db.add(novo_emprestimo)
+    db.commit()
+    db.refresh(novo_emprestimo)
+    return novo_emprestimo
