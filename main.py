@@ -127,3 +127,43 @@ def cadastrar_emprestimo(emprestimo: EmprestimoCreate, db: Session = Depends(get
     db.commit()
     db.refresh(novo_emprestimo)
     return novo_emprestimo
+
+# ROTA DE HISTÓRICO (O Raio-X do Cliente)
+
+@app.get("/clientes/{cliente_id}/historico")
+def ver_historico_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    # 1. Busca o cliente pelo ID
+    cliente = db.query(ClienteDB).filter(ClienteDB.id == cliente_id).first()
+    
+    # Se o cliente não existir, devolve um erro amigável
+    if not cliente:
+        return {"erro": "Cliente não encontrado"}
+        
+    # 2. Prepara os dados dos serviços para enviar
+    servicos_lista = []
+    for s in cliente.servicos:
+        servicos_lista.append({
+            "id": s.id,
+            "tipo": s.tipo_servico,
+            "status": s.status,
+            "observacoes": s.observacoes
+        })
+        
+    # 3. Prepara os dados dos empréstimos
+    emprestimos_lista = []
+    for e in cliente.emprestimos:
+        emprestimos_lista.append({
+            "id": e.id,
+            "banco": e.banco,
+            "valor": e.valor,
+            "parcelas": e.parcelas
+        })
+        
+    # 4. Devolve o pacote completo!
+    return {
+        "cliente_nome": cliente.nome,
+        "cpf": cliente.cpf,
+        "telefone": cliente.telefone,
+        "servicos": servicos_lista,
+        "emprestimos": emprestimos_lista
+    }
