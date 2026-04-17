@@ -167,3 +167,47 @@ def ver_historico_cliente(cliente_id: int, db: Session = Depends(get_db)):
         "servicos": servicos_lista,
         "emprestimos": emprestimos_lista
     }
+    # ==========================================
+    # ROTA PARA ATUALIZAR STATUS DO SERVIÇO (PUT)
+    # ==========================================
+@app.put("/servicos/{servico_id}/concluir")
+def concluir_servico(servico_id: int, db: Session = Depends(get_db)):
+    # 1. Procura o serviço no banco de dados
+    servico = db.query(ServicoDB).filter(ServicoDB.id == servico_id).first()
+    
+    # 2. Se não achar, devolve um erro
+    if not servico:
+        return {"erro": "Serviço não encontrado"}
+        
+    # 3. Muda o status, salva e atualiza!
+    servico.status = "Concluído"
+    db.commit()
+    db.refresh(servico)
+    
+    return {"mensagem": "Serviço concluído com sucesso!", "status": servico.status}
+# ==========================================
+# ROTAS DE EXCLUSÃO (DELETE)
+# ==========================================
+@app.delete("/servicos/{servico_id}")
+def deletar_servico(servico_id: int, db: Session = Depends(get_db)):
+    # Acha o serviço
+    servico = db.query(ServicoDB).filter(ServicoDB.id == servico_id).first()
+    if not servico:
+        return {"erro": "Serviço não encontrado"}
+    
+    # Exclui e salva
+    db.delete(servico)
+    db.commit()
+    return {"mensagem": "Serviço excluído com sucesso!"}
+
+@app.delete("/emprestimos/{emprestimo_id}")
+def deletar_emprestimo(emprestimo_id: int, db: Session = Depends(get_db)):
+    # Acha o empréstimo
+    emprestimo = db.query(EmprestimoDB).filter(EmprestimoDB.id == emprestimo_id).first()
+    if not emprestimo:
+        return {"erro": "Empréstimo não encontrado"}
+    
+    # Exclui e salva
+    db.delete(emprestimo)
+    db.commit()
+    return {"mensagem": "Empréstimo excluído com sucesso!"}

@@ -11,26 +11,26 @@
         input, select { display: block; width: 100%; margin-bottom: 15px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
         button { color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; width: 100%;}
         
-        .btn-cliente { background-color: #28a745; }
-        .btn-cliente:hover { background-color: #218838; }
-        .btn-servico { background-color: #007bff; }
-        .btn-servico:hover { background-color: #0056b3; }
-        .btn-emprestimo { background-color: #ffc107; color: black; }
-        .btn-emprestimo:hover { background-color: #e0a800; }
-        
-        /* Botão de Histórico */
-        .btn-historico { background-color: #17a2b8; width: auto; margin-top: 10px; padding: 5px 10px; font-size: 14px; }
-        .btn-historico:hover { background-color: #138496; }
+        .btn-cliente { background-color: #28a745; } .btn-cliente:hover { background-color: #218838; }
+        .btn-servico { background-color: #007bff; } .btn-servico:hover { background-color: #0056b3; }
+        .btn-emprestimo { background-color: #ffc107; color: black; } .btn-emprestimo:hover { background-color: #e0a800; }
+        .btn-historico { background-color: #17a2b8; width: auto; margin-top: 10px; padding: 5px 10px; font-size: 14px; } .btn-historico:hover { background-color: #138496; }
 
-        /* Estilos da Janela (Modal) */
+        .barra-pesquisa { padding: 12px; font-size: 16px; border: 2px solid #007bff; border-radius: 6px; margin-bottom: 20px; }
         .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); }
         .modal-content { background-color: white; margin: 5% auto; padding: 20px; border-radius: 8px; width: 80%; max-width: 600px; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
-        .close:hover { color: black; }
+        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; } .close:hover { color: black; }
         .lista-detalhes { list-style-type: none; padding: 0; }
-        .lista-detalhes li { background: #f8f9fa; margin-bottom: 5px; padding: 10px; border-left: 4px solid #007bff; }
+        .lista-detalhes li { background: #f8f9fa; margin-bottom: 5px; padding: 10px; border-left: 4px solid #007bff; display: flex; justify-content: space-between; align-items: center;}
         
-        h1, h2, h3 { color: #333; margin-top: 0;} 
+        .btn-concluir { background-color: #28a745; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; width: auto;}
+        
+        /* NOVO: Estilo do botão de excluir */
+        .btn-excluir { background-color: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-left: 5px; width: auto;}
+        .btn-excluir:hover { background-color: #c82333; }
+        .acoes-lista { display: flex; gap: 5px; }
+
+        h1, h2, h3 { color: #333; margin-top: 0;}
     </style>
 </head>
 <body>
@@ -41,12 +41,9 @@
         <div class="form-container">
             <h2>1. Cadastrar Novo Cliente</h2>
             <form id="form-cliente">
-                <label>Nome:</label>
-                <input type="text" id="nome" placeholder="Nome completo" required>
-                <label>CPF:</label>
-                <input type="text" id="cpf" placeholder="Apenas números" required>
-                <label>Telefone:</label>
-                <input type="text" id="telefone" placeholder="(DD) 99999-9999" required>
+                <label>Nome:</label> <input type="text" id="nome" required>
+                <label>CPF:</label> <input type="text" id="cpf" required>
+                <label>Telefone:</label> <input type="text" id="telefone" required>
                 <button type="submit" class="btn-cliente">Salvar Cliente</button>
             </form>
         </div>
@@ -54,12 +51,9 @@
         <div class="form-container">
             <h2>2. Adicionar Serviço INSS</h2>
             <form id="form-servico">
-                <label>Selecione o Cliente:</label>
-                <select id="cliente_id_servico" required><option value="">Carregando...</option></select>
-                <label>Tipo de Serviço:</label>
-                <input type="text" id="tipo_servico" placeholder="Ex: Recuperação de Senha" required>
-                <label>Observações (Opcional):</label>
-                <input type="text" id="observacoes" placeholder="Ex: Senha atual é 123456">
+                <label>Selecione o Cliente:</label> <select id="cliente_id_servico" required><option value="">Carregando...</option></select>
+                <label>Tipo de Serviço:</label> <input type="text" id="tipo_servico" required>
+                <label>Observações:</label> <input type="text" id="observacoes">
                 <button type="submit" class="btn-servico">Salvar Serviço</button>
             </form>
         </div>
@@ -67,20 +61,17 @@
         <div class="form-container">
             <h2>3. Adicionar Empréstimo</h2>
             <form id="form-emprestimo">
-                <label>Selecione o Cliente:</label>
-                <select id="cliente_id_emprestimo" required><option value="">Carregando...</option></select>
-                <label>Valor (R$):</label>
-                <input type="number" step="0.01" id="valor" placeholder="Ex: 5000.00" required>
-                <label>Banco:</label>
-                <input type="text" id="banco" placeholder="Ex: Itaú, BMG" required>
-                <label>Quantidade de Parcelas:</label>
-                <input type="number" id="parcelas" placeholder="Ex: 84" required>
+                <label>Selecione o Cliente:</label> <select id="cliente_id_emprestimo" required><option value="">Carregando...</option></select>
+                <label>Valor (R$):</label> <input type="number" step="0.01" id="valor" required>
+                <label>Banco:</label> <input type="text" id="banco" required>
+                <label>Parcelas:</label> <input type="number" id="parcelas" required>
                 <button type="submit" class="btn-emprestimo">Salvar Empréstimo</button>
             </form>
         </div>
     </div>
 
     <h2>Clientes Cadastrados</h2>
+    <input type="text" id="pesquisa-cliente" class="barra-pesquisa" placeholder="🔍 Pesquisar cliente por Nome ou CPF...">
     <div id="lista-clientes"><p>Carregando clientes...</p></div>
 
     <div id="modalHistorico" class="modal">
@@ -88,132 +79,135 @@
             <span class="close" onclick="fecharModal()">&times;</span>
             <h2 id="modal-nome">Histórico do Cliente</h2>
             <p><strong>CPF:</strong> <span id="modal-cpf"></span> | <strong>Telefone:</strong> <span id="modal-telefone"></span></p>
-            
             <h3>Serviços Ativos (INSS)</h3>
             <ul id="modal-servicos" class="lista-detalhes"></ul>
-            
             <h3>Empréstimos Contratados</h3>
             <ul id="modal-emprestimos" class="lista-detalhes"></ul>
         </div>
     </div>
 
     <script>
+        let clientesGlobais = [];
+
         async function carregarClientes() {
             try {
                 const resposta = await fetch('http://127.0.0.1:8000/clientes/');
-                const clientes = await resposta.json();
-                
-                const divLista = document.getElementById('lista-clientes');
-                const selectServico = document.getElementById('cliente_id_servico');
-                const selectEmprestimo = document.getElementById('cliente_id_emprestimo');
-                
-                divLista.innerHTML = ''; 
-                selectServico.innerHTML = '<option value="">Escolha um cliente...</option>';
-                selectEmprestimo.innerHTML = '<option value="">Escolha um cliente...</option>';
-
-                clientes.forEach(cliente => {
-                    // NOVO: Adicionado o botão azul chamando a função abrirHistorico(id)
-                    const card = document.createElement('div');
-                    card.className = 'card';
-                    card.innerHTML = `
-                        <strong>ID:</strong> ${cliente.id} | 
-                        <strong>Nome:</strong> ${cliente.nome} | 
-                        <strong>CPF:</strong> ${cliente.cpf} <br>
-                        <button class="btn-historico" onclick="abrirHistorico(${cliente.id})">Ver Histórico Completo</button>
-                    `;
-                    divLista.appendChild(card);
-
-                    const opcaoServico = document.createElement('option');
-                    opcaoServico.value = cliente.id; opcaoServico.text = cliente.nome;
-                    selectServico.appendChild(opcaoServico);
-
-                    const opcaoEmprestimo = document.createElement('option');
-                    opcaoEmprestimo.value = cliente.id; opcaoEmprestimo.text = cliente.nome;
-                    selectEmprestimo.appendChild(opcaoEmprestimo);
-                });
+                clientesGlobais = await resposta.json(); 
+                atualizarDropdowns(clientesGlobais);
+                renderizarLista(clientesGlobais);
             } catch (erro) {
                 document.getElementById('lista-clientes').innerHTML = '<p>Erro ao conectar com a API.</p>';
             }
         }
 
-        // ==========================================
-        // NOVO: FUNÇÕES DA JANELA MODAL (HISTÓRICO)
-        // ==========================================
+        function renderizarLista(lista) {
+            const divLista = document.getElementById('lista-clientes');
+            divLista.innerHTML = ''; 
+            if (lista.length === 0) { divLista.innerHTML = '<p>Nenhum cliente encontrado.</p>'; return; }
+            lista.forEach(cliente => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerHTML = `<strong>ID:</strong> ${cliente.id} | <strong>Nome:</strong> ${cliente.nome} | <strong>CPF:</strong> ${cliente.cpf} <br><button class="btn-historico" onclick="abrirHistorico(${cliente.id})">Ver Histórico Completo</button>`;
+                divLista.appendChild(card);
+            });
+        }
+
+        function atualizarDropdowns(lista) {
+            const selectServico = document.getElementById('cliente_id_servico');
+            const selectEmprestimo = document.getElementById('cliente_id_emprestimo');
+            selectServico.innerHTML = '<option value="">Escolha um cliente...</option>';
+            selectEmprestimo.innerHTML = '<option value="">Escolha um cliente...</option>';
+            lista.forEach(cliente => {
+                selectServico.appendChild(new Option(cliente.nome, cliente.id));
+                selectEmprestimo.appendChild(new Option(cliente.nome, cliente.id));
+            });
+        }
+
+        document.getElementById('pesquisa-cliente').addEventListener('input', function(evento) {
+            const textoDigitado = evento.target.value.toLowerCase();
+            const clientesFiltrados = clientesGlobais.filter(cliente => cliente.nome.toLowerCase().includes(textoDigitado) || cliente.cpf.includes(textoDigitado));
+            renderizarLista(clientesFiltrados);
+        });
+
         async function abrirHistorico(id) {
             try {
-                // Bate na rota nova que criamos no Python
                 const resposta = await fetch(`http://127.0.0.1:8000/clientes/${id}/historico`);
                 const dados = await resposta.json();
-
-                // Preenche o cabeçalho do Modal
                 document.getElementById('modal-nome').innerText = "Histórico: " + dados.cliente_nome;
                 document.getElementById('modal-cpf').innerText = dados.cpf;
                 document.getElementById('modal-telefone').innerText = dados.telefone;
-
-                // Preenche a lista de Serviços
+                
                 const listaServicos = document.getElementById('modal-servicos');
-                listaServicos.innerHTML = ''; // Limpa a lista anterior
-                if (dados.servicos.length === 0) {
-                    listaServicos.innerHTML = '<li>Nenhum serviço registrado.</li>';
-                } else {
-                    dados.servicos.forEach(s => {
-                        listaServicos.innerHTML += `<li><strong>${s.tipo}</strong> - Status: ${s.status} <br><em>Obs: ${s.observacoes || 'Nenhuma'}</em></li>`;
-                    });
+                listaServicos.innerHTML = '';
+                if (dados.servicos.length === 0) { 
+                    listaServicos.innerHTML = '<li>Nenhum serviço registrado.</li>'; 
+                } else { 
+                    dados.servicos.forEach(s => { 
+                        let botaoConcluir = s.status === 'Pendente' ? `<button class="btn-concluir" onclick="concluirServico(${s.id}, ${id})">✔ Concluir</button>` : '';
+                        let botaoExcluir = `<button class="btn-excluir" onclick="excluirServico(${s.id}, ${id})">🗑 Excluir</button>`;
+                        
+                        listaServicos.innerHTML += `
+                            <li>
+                                <div><strong>${s.tipo}</strong> - Status: <b>${s.status}</b><br><em>Obs: ${s.observacoes || 'Nenhuma'}</em></div>
+                                <div class="acoes-lista">${botaoConcluir} ${botaoExcluir}</div>
+                            </li>`; 
+                    }); 
                 }
 
-                // Preenche a lista de Empréstimos
                 const listaEmprestimos = document.getElementById('modal-emprestimos');
                 listaEmprestimos.innerHTML = '';
-                if (dados.emprestimos.length === 0) {
-                    listaEmprestimos.innerHTML = '<li>Nenhum empréstimo registrado.</li>';
-                } else {
-                    dados.emprestimos.forEach(e => {
-                        // Converte o número para o formato de Moeda do Brasil (R$)
-                        const valorFormatado = e.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                        listaEmprestimos.innerHTML += `<li><strong>Banco ${e.banco}</strong> - ${valorFormatado} em ${e.parcelas}x</li>`;
-                    });
+                if (dados.emprestimos.length === 0) { 
+                    listaEmprestimos.innerHTML = '<li>Nenhum empréstimo registrado.</li>'; 
+                } else { 
+                    dados.emprestimos.forEach(e => { 
+                        const valorFormatado = e.valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
+                        let botaoExcluir = `<button class="btn-excluir" onclick="excluirEmprestimo(${e.id}, ${id})">🗑 Excluir</button>`;
+                        
+                        listaEmprestimos.innerHTML += `
+                            <li>
+                                <div><strong>Banco ${e.banco}</strong> - ${valorFormatado} em ${e.parcelas}x</div>
+                                <div class="acoes-lista">${botaoExcluir}</div>
+                            </li>`; 
+                    }); 
                 }
 
-                // Faz a janela aparecer na tela
                 document.getElementById('modalHistorico').style.display = "block";
-            } catch (erro) {
-                alert("Erro ao buscar histórico do cliente.");
-            }
+            } catch (erro) { alert("Erro ao buscar histórico do cliente."); }
         }
 
-        function fecharModal() {
-            document.getElementById('modalHistorico').style.display = "none";
+        async function concluirServico(servicoId, clienteId) {
+            if (!confirm("Marcar este serviço como concluído?")) return;
+            try {
+                const resposta = await fetch(`http://127.0.0.1:8000/servicos/${servicoId}/concluir`, { method: 'PUT' });
+                if (resposta.ok) { abrirHistorico(clienteId); } else { alert("Erro ao atualizar o serviço."); }
+            } catch (erro) { alert("Erro de conexão."); }
         }
 
-        // Fecha a janela se clicar fora dela (no fundo escuro)
-        window.onclick = function(evento) {
-            const modal = document.getElementById('modalHistorico');
-            if (evento.target == modal) {
-                modal.style.display = "none";
-            }
+        // ==========================================
+        // NOVO: FUNÇÕES DE EXCLUSÃO (DELETE)
+        // ==========================================
+        async function excluirServico(servicoId, clienteId) {
+            if (!confirm("🚨 ATENÇÃO: Tem certeza que deseja apagar este serviço definitivamente?")) return;
+            try {
+                const resposta = await fetch(`http://127.0.0.1:8000/servicos/${servicoId}`, { method: 'DELETE' });
+                if (resposta.ok) { abrirHistorico(clienteId); } else { alert("Erro ao apagar."); }
+            } catch (erro) { alert("Erro de conexão."); }
         }
 
-        // ... LÓGICA DOS FORMULÁRIOS CONTINUA IGUAL ...
-        document.getElementById('form-cliente').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const dados = { nome: document.getElementById('nome').value, cpf: document.getElementById('cpf').value, telefone: document.getElementById('telefone').value };
-            const resp = await fetch('http://127.0.0.1:8000/clientes/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(resp.ok) { document.getElementById('form-cliente').reset(); carregarClientes(); } else { alert('Erro: CPF pode já existir.'); }
-        });
+        async function excluirEmprestimo(emprestimoId, clienteId) {
+            if (!confirm("🚨 ATENÇÃO: Tem certeza que deseja apagar este empréstimo definitivamente?")) return;
+            try {
+                const resposta = await fetch(`http://127.0.0.1:8000/emprestimos/${emprestimoId}`, { method: 'DELETE' });
+                if (resposta.ok) { abrirHistorico(clienteId); } else { alert("Erro ao apagar."); }
+            } catch (erro) { alert("Erro de conexão."); }
+        }
 
-        document.getElementById('form-servico').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const dados = { cliente_id: parseInt(document.getElementById('cliente_id_servico').value), tipo_servico: document.getElementById('tipo_servico').value, observacoes: document.getElementById('observacoes').value };
-            const resp = await fetch('http://127.0.0.1:8000/servicos/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(resp.ok) { alert('Serviço salvo!'); document.getElementById('form-servico').reset(); } else { alert('Erro ao salvar.'); }
-        });
+        function fecharModal() { document.getElementById('modalHistorico').style.display = "none"; }
+        window.onclick = function(evento) { const modal = document.getElementById('modalHistorico'); if (evento.target == modal) { modal.style.display = "none"; } }
 
-        document.getElementById('form-emprestimo').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const dados = { cliente_id: parseInt(document.getElementById('cliente_id_emprestimo').value), valor: parseFloat(document.getElementById('valor').value), banco: document.getElementById('banco').value, parcelas: parseInt(document.getElementById('parcelas').value) };
-            const resp = await fetch('http://127.0.0.1:8000/emprestimos/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) });
-            if(resp.ok) { alert('Empréstimo salvo!'); document.getElementById('form-emprestimo').reset(); } else { alert('Erro ao salvar.'); }
-        });
+        document.getElementById('form-cliente').addEventListener('submit', async function(e) { e.preventDefault(); const dados = { nome: document.getElementById('nome').value, cpf: document.getElementById('cpf').value, telefone: document.getElementById('telefone').value }; const resp = await fetch('http://127.0.0.1:8000/clientes/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }); if(resp.ok) { document.getElementById('form-cliente').reset(); carregarClientes(); } else { alert('Erro: CPF pode já existir.'); } });
+        document.getElementById('form-servico').addEventListener('submit', async function(e) { e.preventDefault(); const dados = { cliente_id: parseInt(document.getElementById('cliente_id_servico').value), tipo_servico: document.getElementById('tipo_servico').value, observacoes: document.getElementById('observacoes').value }; const resp = await fetch('http://127.0.0.1:8000/servicos/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }); if(resp.ok) { alert('Serviço salvo!'); document.getElementById('form-servico').reset(); } else { alert('Erro ao salvar.'); } });
+        document.getElementById('form-emprestimo').addEventListener('submit', async function(e) { e.preventDefault(); const dados = { cliente_id: parseInt(document.getElementById('cliente_id_emprestimo').value), valor: parseFloat(document.getElementById('valor').value), banco: document.getElementById('banco').value, parcelas: parseInt(document.getElementById('parcelas').value) }; const resp = await fetch('http://127.0.0.1:8000/emprestimos/', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dados) }); if(resp.ok) { alert('Empréstimo salvo!'); document.getElementById('form-emprestimo').reset(); } else { alert('Erro ao salvar.'); } });
 
         carregarClientes();
     </script>
