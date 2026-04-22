@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Float, ForeignKey, func
 from sqlalchemy.orm import declarative_base, sessionmaker, Session, relationship 
 
 # Inicialização da API
@@ -56,6 +56,7 @@ class EmprestimoDB(Base):
     valor = Column(Float)
     banco = Column(String)
     parcelas = Column(Integer)
+    status = Column(String, default="Pendente") 
     
     cliente = relationship("ClienteDB", back_populates="emprestimos")
 
@@ -128,6 +129,29 @@ def cadastrar_emprestimo(emprestimo: EmprestimoCreate, db: Session = Depends(get
     db.refresh(novo_emprestimo)
     return novo_emprestimo
 
+# STATUS EMPRÉSTIMO E FILTRO
+
+@app.put("/emprestimos/{emprestimo_id}/concluir")
+def concluir_emprestimo(emprestimo_id: int, db: Session = Depends(get_db)):
+    emprestimo = db.query(EmprestimoDB).filter(EmprestimoDB.id == emprestimo_id).first()
+    if not emprestimo: return {"erro": "Empréstimo não encontrado"}
+    
+    emprestimo.status = "Concluído"
+    db.commit()
+    return {"mensagem": "Empréstimo concluído com sucesso!"}
+
+@app.get("/clientes/pendentes")
+def listar_clientes_pendentes(db: Session = Depends(get_db)):
+    # Essa rota vasculha todos os clientes e só devolve quem tem algo travado
+    clientes = db.query(ClienteDB).all()
+    resultado = []
+    for c in clientes:
+        tem_servico = any(s.status == "Pendente" for s in c.servicos)
+        tem_emprestimo = any(e.status == "Pendente" for e in c.emprestimos)
+        if tem_servico or tem_emprestimo:
+            resultado.append({"id": c.id, "nome": c.nome, "cpf": c.cpf})
+    return resultado
+
 # ROTA DE HISTÓRICO (O Raio-X do Cliente)
 
 @app.get("/clientes/{cliente_id}/historico")
@@ -149,14 +173,15 @@ def ver_historico_cliente(cliente_id: int, db: Session = Depends(get_db)):
             "observacoes": s.observacoes
         })
         
-    # 3. Prepara os dados dos empréstimos
+   # 3. Prepara os dados dos empréstimos
     emprestimos_lista = []
     for e in cliente.emprestimos:
         emprestimos_lista.append({
             "id": e.id,
             "banco": e.banco,
             "valor": e.valor,
-            "parcelas": e.parcelas
+            "parcelas": e.parcelas,
+            "status": e.status 
         })
         
     # 4. Devolve o pacote completo!
@@ -167,9 +192,9 @@ def ver_historico_cliente(cliente_id: int, db: Session = Depends(get_db)):
         "servicos": servicos_lista,
         "emprestimos": emprestimos_lista
     }
-    # ==========================================
+    
     # ROTA PARA ATUALIZAR STATUS DO SERVIÇO (PUT)
-    # ==========================================
+  
 @app.put("/servicos/{servico_id}/concluir")
 def concluir_servico(servico_id: int, db: Session = Depends(get_db)):
     # 1. Procura o serviço no banco de dados
@@ -185,9 +210,9 @@ def concluir_servico(servico_id: int, db: Session = Depends(get_db)):
     db.refresh(servico)
     
     return {"mensagem": "Serviço concluído com sucesso!", "status": servico.status}
-# ==========================================
+
 # ROTAS DE EXCLUSÃO (DELETE)
-# ==========================================
+
 @app.delete("/servicos/{servico_id}")
 def deletar_servico(servico_id: int, db: Session = Depends(get_db)):
     # Acha o serviço
@@ -211,3 +236,17 @@ def deletar_emprestimo(emprestimo_id: int, db: Session = Depends(get_db)):
     db.delete(emprestimo)
     db.commit()
     return {"mensagem": "Empréstimo excluído com sucesso!"}
+
+# ROTA DO DASHBOARD (MÉTRICAS GERAIS)
+@app.get("/dashboard")
+def obter_dashboard(db: Session = Depends(get_db)):
+    servicos_pend = db.query(ServicoDB).filter(ServicoDB.status == "Pendente").count()
+    emprestimos_pend = db.query(EmprestimoDB).filter(EmprestimoDB.status == "Pendente").count()
+    
+    total_emprestimos = db.query(func.sum(EmprestimoDB.valor)).scalar()
+    if total_emprestimos is None: total_emprestimos = 0.0
+
+    return {
+        "pendencias_totais": servicos_pend + emprestimos_pend,
+        "total_emprestimos": total_emprestimos
+    }
