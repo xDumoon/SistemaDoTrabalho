@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credmax - Sistema de Gestão</title>
+    <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 250px;
+            --primary: #0d6efd;
+            --primary-dark: #0a58ca;
+            --primary-light: #e8f0fe;
+            --success: #198754;
+            --success-light: #d1e7dd;
+            --danger: #dc3545;
+            --danger-light: #f8d7da;
+            --warning: #ffc107;
+            --warning-light: #fff3cd;
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-sidebar: #0f1724;
+            --text-body: #353c4a;
+            --text-muted: #7c8290;
+            --text-heading: #1a1a2e;
+            --border: #e9eaee;
+            --shadow: 0 2px 8px rgba(0,0,0,0.06);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.10);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: 0.2s ease;
+        }
+        body.dark-mode {
+            --bg-body: #0b1120;
+            --bg-card: #151d2f;
+            --bg-input: #1a2338;
+            --bg-sidebar: #080d18;
+            --text-body: #c8d0dc;
+            --text-muted: #7c89a3;
+            --text-heading: #e2e8f0;
+            --border: #1e2a44;
+            --shadow: 0 2px 8px rgba(0,0,0,0.3);
+            --shadow-lg: 0 8px 30px rgba(0,0,0,0.4);
+            --primary-light: #1a2a4a;
+            --success-light: #0d3322;
+            --danger-light: #3d1520;
+            --warning-light: #3d2e0a;
+        }
+        body { background: var(--bg-body); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; color: var(--text-body); -webkit-font-smoothing: antialiased; transition: background 0.3s, color 0.3s; }
+
+        /* LOGIN */
+        .login-page { min-height: 100vh; background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%); display: flex; align-items: center; justify-content: center; padding: 1rem; }
+        .login-card { background: var(--bg-card); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 400px; box-shadow: 0 25px 80px rgba(0,0,0,0.2); }
+        .login-card .logo { text-align: center; margin-bottom: 2rem; }
+        .login-card .logo .logo-icon { width: 80px; height: 80px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1rem; }
+        .login-card .logo .logo-icon i { font-size: 2rem; color: white; }
+        .login-card .logo h1 { font-size: 1.4rem; font-weight: 700; margin: 0; color: var(--text-heading); }
+        .login-card .logo p { color: var(--text-muted); font-size: 0.85rem; margin: 2px 0 0; }
+
+        /* APP LAYOUT */
+        .app-layout { display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-width); background: var(--bg-sidebar); color: white; display: flex; flex-direction: column; position: fixed; top: 0; left: 0; height: 100vh; z-index: 1000; transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .sidebar-header { padding: 1.25rem 1.25rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        .sidebar-header h5 { font-weight: 700; margin: 0; display: flex; align-items: center; gap: 0.5rem; }
+        .sidebar-header h5 i { color: var(--primary); }
+        .sidebar-header small { color: rgba(255,255,255,0.35); font-size: 0.75rem; }
+        .sidebar-nav { padding: 0.5rem; flex: 1; overflow-y: auto; }
+        .sidebar-nav .nav-item { margin-bottom: 1px; }
+        .sidebar-nav .nav-link { color: rgba(255,255,255,0.55); border-radius: var(--radius-sm); padding: 0.6rem 0.85rem; display: flex; align-items: center; gap: 0.75rem; transition: all var(--transition); cursor: pointer; text-decoration: none; font-size: 0.9rem; }
+        .sidebar-nav .nav-link:hover { color: white; background: rgba(255,255,255,0.07); }
+        .sidebar-nav .nav-link.active { color: white; background: var(--primary); font-weight: 500; box-shadow: 0 2px 8px rgba(13,110,253,0.3); }
+        .sidebar-nav .nav-link i { font-size: 1.15rem; width: 1.4rem; text-align: center; flex-shrink: 0; }
+        .sidebar-footer { padding: 0.65rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+        .sidebar-footer small { color: rgba(255,255,255,0.3); font-size: 0.75rem; }
+
+        /* DARK MODE TOGGLE */
+        .dark-toggle { background: rgba(255,255,255,0.08); border: none; color: rgba(255,255,255,0.5); width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all var(--transition); font-size: 1rem; flex-shrink: 0; }
+        .dark-toggle:hover { background: rgba(255,255,255,0.15); color: white; }
+
+        /* MAIN */
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 1.5rem 2rem; min-height: 100vh; transition: background 0.3s; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }
+        .top-bar h4 { margin: 0; font-weight: 600; color: var(--text-heading); font-size: 1.25rem; transition: color 0.3s; }
+        .user-info { display: flex; align-items: center; gap: 0.75rem; }
+        .user-info .user-avatar { width: 36px; height: 36px; background: var(--primary-light); color: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.85rem; }
+        .user-info #userDisplayName { font-weight: 500; color: var(--text-body); font-size: 0.9rem; transition: color 0.3s; }
+
+        /* STAT CARDS */
+        .stat-card { background: var(--bg-card); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); transition: all var(--transition); border: 1px solid var(--border); }
+        .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+        .stat-card .icon { width: 44px; height: 44px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .stat-card .stat-value { font-size: 1.65rem; font-weight: 700; margin: 0; line-height: 1.2; color: var(--text-heading); transition: color 0.3s; }
+        .stat-card .stat-label { color: var(--text-muted); font-size: 0.8rem; margin: 0; text-transform: uppercase; letter-spacing: 0.3px; }
+
+        /* CARDS CUSTOM */
+        .card-custom { background: var(--bg-card); border-radius: var(--radius); border: none; box-shadow: var(--shadow); overflow: hidden; transition: background 0.3s; }
+        .card-custom .card-header { background: transparent; border-bottom: 1px solid var(--border); padding: 1rem 1.25rem; font-weight: 600; color: var(--text-heading); display: flex; align-items: center; gap: 0.5rem; }
+        .card-custom .card-body { padding: 1.25rem; }
+
+        /* FORM SECTION */
+        .form-section { background: var(--bg-card); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.25rem; border: 1px solid var(--border); transition: background 0.3s; }
+        .form-section h5 { font-weight: 600; margin-bottom: 1rem; color: var(--text-heading); font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+
+        /* TOAST */
+        .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 9999; }
+        .toast-custom { background: var(--bg-card); border-radius: var(--radius-sm); padding: 0.75rem 1.25rem; box-shadow: var(--shadow-lg); display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; border-left: 4px solid var(--primary); min-width: 300px; max-width: 420px; font-size: 0.9rem; animation: slideIn 0.35s cubic-bezier(0.4,0,0.2,1); transition: background 0.3s; }
+        .toast-custom.success { border-left-color: var(--success); }
+        .toast-custom.error { border-left-color: var(--danger); }
+        .toast-custom.warning { border-left-color: var(--warning); }
+        @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* CLIENTE CARD */
+        .cliente-card { background: var(--bg-card); border-radius: var(--radius-sm); padding: 0.85rem 1.1rem; margin-bottom: 0.4rem; border: 1px solid var(--border); transition: all var(--transition); display: flex; justify-content: space-between; align-items: center; }
+        .cliente-card:hover { border-color: var(--primary); box-shadow: 0 2px 12px rgba(13,110,253,0.08); }
+        .cliente-card.pendente { border-left: 4px solid var(--danger); }
+
+        /* BADGES */
+        .badge-pendente { background: var(--warning-light); color: var(--warning); }
+        .badge-concluido { background: var(--success-light); color: var(--success); }
+        .badge-pago { background: var(--success-light); color: var(--success); }
+        .badge-nao-pago { background: var(--danger-light); color: var(--danger); }
+
+        /* TABS */
+        .tab-btn { border-radius: var(--radius-sm); padding: 0.45rem 1.15rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg-card); transition: all var(--transition); font-size: 0.875rem; color: var(--text-body); }
+        .tab-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .tab-btn.danger.active { background: var(--danger); border-color: var(--danger); }
+
+        /* SEARCH */
+        .search-box { position: relative; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); pointer-events: none; }
+        .search-box input { padding-left: 36px; border-radius: var(--radius-sm); border: 1px solid var(--border); transition: all var(--transition); background: var(--bg-input); color: var(--text-body); }
+        .search-box input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,110,253,0.1); }
+
+        /* MODAL */
+        .modal-custom .modal-content { border-radius: 16px; border: none; box-shadow: 0 25px 80px rgba(0,0,0,0.15); background: var(--bg-card); }
+        .modal-custom .modal-header { border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; }
+        .modal-custom .modal-body { padding: 1.5rem; }
+        .modal-custom .modal-footer { border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 2.5rem; color: var(--text-muted); }
+        .empty-state i { font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4; }
+        .empty-state p { margin: 0; font-size: 0.9rem; }
+
+        /* SIDEBAR TOGGLE (mobile) */
+        .sidebar-toggle { display: none; }
+
+        /* ITEM ROW */
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 0; border-bottom: 1px solid var(--border); gap: 0.75rem; flex-wrap: wrap; }
+        .item-row:last-child { border-bottom: none; }
+        .item-info { flex: 1; min-width: 180px; }
+        .item-info strong { font-size: 0.95rem; color: var(--text-heading); transition: color 0.3s; }
+
+        /* BUTTON ACTION */
+        .btn-action { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: var(--radius-sm); transition: all var(--transition); }
+        .btn-action:hover { transform: scale(1.05); }
+
+        /* FILTER SELECT */
+        .filtro-select { border-radius: var(--radius-sm); padding: 0.3rem 0.75rem; font-size: 0.85rem; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-body); }
+
+        /* FORM CONTROLS */
+        .form-control, .form-select { border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 0.5rem 0.75rem; transition: all var(--transition); font-size: 0.9rem; background: var(--bg-input); color: var(--text-body); }
+        .form-control:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(13,110,253,0.1); }
+        .form-control-lg { padding: 0.65rem 1rem; font-size: 1rem; }
+        .form-control::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+        /* PAGES */
+        .section-page { display: none; animation: fadeIn 0.25s ease; }
+        .section-page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* MISC */
+        .bg-soft-primary { background: var(--primary-light); }
+        .text-danger { color: var(--danger) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-primary { color: var(--primary) !important; }
+
+        /* DARK MODE OVERRIDES */
+        body.dark-mode .bg-light { background-color: var(--bg-card) !important; color: var(--text-body); }
+        body.dark-mode .bg-light strong { color: var(--text-heading); }
+        body.dark-mode .bg-light small { color: var(--text-muted); }
+        body.dark-mode .table { --bs-table-bg: transparent; --bs-table-color: var(--text-body); --bs-table-border-color: var(--border); }
+        body.dark-mode .table thead th { color: var(--text-muted); border-bottom-color: var(--border); }
+        body.dark-mode .table-hover > tbody > tr:hover > * { background-color: rgba(255,255,255,0.03); }
+        body.dark-mode .btn-outline-primary { color: var(--primary); border-color: rgba(13,110,253,0.4); }
+        body.dark-mode .btn-outline-primary:hover { background: var(--primary); color: white; }
+        body.dark-mode .btn-outline-success { color: var(--success); border-color: rgba(25,135,84,0.4); }
+        body.dark-mode .btn-outline-success:hover { background: var(--success); color: white; }
+        body.dark-mode .btn-outline-warning { color: var(--warning); border-color: rgba(255,193,7,0.4); }
+        body.dark-mode .btn-outline-warning:hover { background: var(--warning); color: #000; }
+        body.dark-mode .btn-outline-danger { color: var(--danger); border-color: rgba(220,53,69,0.4); }
+        body.dark-mode .btn-outline-danger:hover { background: var(--danger); color: white; }
+        body.dark-mode .btn-outline-secondary { color: var(--text-muted); border-color: var(--border); }
+        body.dark-mode .btn-outline-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text-body); border-color: var(--text-muted); }
+        body.dark-mode .text-muted { color: var(--text-muted) !important; }
+        body.dark-mode .modal-content { background: var(--bg-card); color: var(--text-body); }
+        body.dark-mode .btn-close { filter: invert(1); }
+        body.dark-mode .bg-primary { background-color: var(--primary) !important; }
+        body.dark-mode .bg-success { background-color: var(--success) !important; }
+        body.dark-mode .bg-warning { background-color: var(--warning) !important; }
+        body.dark-mode .bg-danger { background-color: var(--danger) !important; }
+        body.dark-mode .bg-secondary { background-color: #495057 !important; }
+        body.dark-mode option { background: var(--bg-input); color: var(--text-body); }
+        body.dark-mode .form-check-input { background-color: var(--bg-input); border-color: var(--border); }
+        body.dark-mode .form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
+        body.dark-mode .form-check-label { color: var(--text-body); }
+        body.dark-mode .form-select option { background: var(--bg-input); color: var(--text-body); }
+        body.dark-mode .table-responsive { border-radius: var(--radius); }
+        body.dark-mode .table { border-radius: var(--radius); overflow: hidden; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 1rem; }
+            .sidebar-toggle { display: flex; position: fixed; top: 0.75rem; left: 0.75rem; z-index: 1001; background: var(--primary); color: white; border: none; border-radius: var(--radius-sm); padding: 0.5rem 0.65rem; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(13,110,253,0.3); }
+            .top-bar { padding-left: 2.5rem; }
+            .stat-card .stat-value { font-size: 1.3rem; }
+            .stat-card .icon { width: 36px; height: 36px; font-size: 1.1rem; }
+            .toast-custom { min-width: 0; max-width: calc(100vw - 2rem); }
+        }
+    </style>
+</head>
+<body>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- LOGIN -->
+    <div id="loginPage" class="login-page">
+        <div class="login-card">
+            <div class="logo">
+                <div class="logo-icon" style="background:transparent">
+                    <svg viewBox="0 0 64 64" width="64" height="64">
+                        <circle cx="32" cy="32" r="30" fill="#0b1e3d" stroke="#e67e22" stroke-width="3"/>
+                        <circle cx="32" cy="32" r="26" fill="none" stroke="#e67e22" stroke-width="0.8" opacity="0.4"/>
+                        <text x="32" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="white" letter-spacing="0.5">CRED<tspan fill="#e67e22">MAX</tspan></text>
+                        <line x1="10" y1="36" x2="54" y2="36" stroke="#e67e22" stroke-width="1" opacity="0.6"/>
+                        <text x="32" y="46" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="5.5" fill="#e67e22" letter-spacing="1.5">ASSESSORIA E SERVICOS</text>
+                    </svg>
+                </div>
+                <h1>Credmax</h1>
+                <p>Sistema de Gestao</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-3"><label class="form-label">Usuário</label><input type="text" class="form-control form-control-lg" id="loginUser" required autofocus></div>
+                <div class="mb-4"><label class="form-label">Senha</label><input type="password" class="form-control form-control-lg" id="loginPass" required></div>
+                <div id="loginError" class="alert alert-danger d-none"></div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Entrar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- APP -->
+    <div id="appLayout" class="app-layout" style="display:none;">
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="document.getElementById('sidebar').classList.toggle('show')"><i class="bi bi-list"></i></button>
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div style="display:flex;align-items:center;gap:0.6rem">
+                    <svg viewBox="0 0 64 64" width="32" height="32" style="flex-shrink:0">
+                        <circle cx="32" cy="32" r="30" fill="#0b1e3d" stroke="#e67e22" stroke-width="3"/>
+                        <text x="32" y="30" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="14" fill="white" letter-spacing="0.5">CRED<tspan fill="#e67e22">MAX</tspan></text>
+                        <line x1="10" y1="36" x2="54" y2="36" stroke="#e67e22" stroke-width="1" opacity="0.6"/>
+                        <text x="32" y="46" text-anchor="middle" font-family="Arial,sans-serif" font-weight="600" font-size="5.5" fill="#e67e22" letter-spacing="1.5">ASSESSORIA E SERVICOS</text>
+                    </svg>
+                    <div><h5 style="margin:0;line-height:1.2">Credmax</h5><small>Sistema de Gestao</small></div>
+                </div>
+            </div>
+            <div class="sidebar-nav">
+                <div class="nav-item"><a class="nav-link active" data-page="dashboard"><i class="bi bi-grid"></i> Dashboard</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="clientes"><i class="bi bi-people"></i> Clientes</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="servicos"><i class="bi bi-gear"></i> Serviços INSS</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="emprestimos"><i class="bi bi-cash-stack"></i> Empréstimos</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="receita"><i class="bi bi-graph-up-arrow"></i> Minha Receita</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="relatorios"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="logs"><i class="bi bi-clock-history"></i> Auditoria</a></div>
+            </div>
+            <div class="sidebar-footer"><small>Conectado como <span id="footerUsername">---</span></small><button class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Modo escuro"><i class="bi bi-moon-stars"></i></button></div>
+        </nav>
+
+        <main class="main-content">
+            <div class="top-bar">
+                <h4 id="pageTitle">Dashboard</h4>
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <span id="userDisplayName">---</span>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right me-1"></i>Sair</button>
+                </div>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="page-dashboard" class="section-page active">
+                <div class="row g-3 mb-3" id="dashboardCards">
+                    <div class="col-md-3 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:#e8f0fe;color:var(--primary)"><i class="bi bi-people"></i></div><div><p class="stat-label">Clientes</p><p class="stat-value" id="dashTotalClientes">-</p></div></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:var(--warning-light);color:#856404"><i class="bi bi-exclamation-triangle"></i></div><div><p class="stat-label">Pendências</p><p class="stat-value" id="dashPendencias">-</p></div></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:var(--success-light);color:var(--success)"><i class="bi bi-currency-dollar"></i></div><div><p class="stat-label">Receita (mês)</p><p class="stat-value" id="dashReceitaMes">-</p></div></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:var(--danger-light);color:var(--danger)"><i class="bi bi-cash-coin"></i></div><div><p class="stat-label">A Receber</p><p class="stat-value" style="color:var(--danger)" id="dashAReceber">-</p></div></div></div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:#e8f0fe;color:var(--primary)"><i class="bi bi-bank"></i></div><div><p class="stat-label">Empréstimos (mês)</p><p class="stat-value" id="dashEmpMes">-</p></div></div></div>
+                    <div class="col-md-4 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:var(--success-light);color:var(--success)"><i class="bi bi-percent"></i></div><div><p class="stat-label">Comissão (mês)</p><p class="stat-value" id="dashComissaoMes">-</p></div></div></div>
+                    <div class="col-md-4 col-6"><div class="stat-card d-flex align-items-center gap-3"><div class="icon" style="background:var(--warning-light);color:#856404"><i class="bi bi-piggy-bank"></i></div><div><p class="stat-label">Comissão Total</p><p class="stat-value" id="dashComissaoTotal">-</p></div></div></div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6"><div class="card-custom card"><div class="card-header"><i class="bi bi-currency-dollar me-2"></i>Receita de Serviços</div><div class="card-body"><canvas id="chartServicos" height="200"></canvas></div></div></div>
+                    <div class="col-md-6"><div class="card-custom card"><div class="card-header"><i class="bi bi-exclamation-circle me-2"></i>Pendências</div><div class="card-body" id="dashPendenciasLista"><p class="text-muted mb-0">Carregando...</p></div></div></div>
+                </div>
+            </div>
+
+            <!-- CLIENTES -->
+            <div id="page-clientes" class="section-page">
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <button class="tab-btn active" id="tabClientesTodos" onclick="filtrarClientes('todos')">Todos</button>
+                        <button class="tab-btn ms-1 danger" id="tabClientesPendentes" onclick="alternarAbaPendentes()">Com Pendências</button>
+                        <button class="tab-btn ms-1" id="tabClientesDevendo" onclick="alternarAbaDevendo()">Devendo</button>
+                    </div>
+                    <div class="col-md-4 mt-2 mt-md-0"><div class="search-box"><i class="bi bi-search"></i><input type="text" class="form-control" id="searchCliente" placeholder="Buscar..." oninput="buscarClientes()"></div></div>
+                </div>
+                <div class="form-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3"><h5 class="mb-0">Cadastrar Cliente</h5><button class="btn btn-outline-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#formNovoCliente"><i class="bi bi-plus-lg"></i> Novo</button></div>
+                    <div class="collapse" id="formNovoCliente">
+                        <form id="formCliente" class="row g-2">
+                            <div class="col-md-4"><input class="form-control" id="cliNome" placeholder="Nome completo" required></div>
+                            <div class="col-md-2"><input class="form-control" id="cliCPF" placeholder="CPF" required></div>
+                            <div class="col-md-2"><input class="form-control" id="cliTel" placeholder="Telefone" required></div>
+                            <div class="col-md-2"><input class="form-control" id="cliEmail" placeholder="Email"></div>
+                            <div class="col-md-2"><input class="form-control" id="cliNasc" placeholder="Nascimento"></div>
+                            <div class="col-12"><input class="form-control" id="cliEnd" placeholder="Endereço"></div>
+                            <div class="col-12"><textarea class="form-control" id="cliObs" placeholder="Observações" rows="2"></textarea></div>
+                            <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Salvar</button></div>
+                        </form>
+                    </div>
+                </div>
+                <div id="clientesLista"></div>
+            </div>
+
+            <!-- SERVIÇOS -->
+            <div id="page-servicos" class="section-page">
+                <div class="form-section">
+                    <h5>Adicionar Serviço INSS</h5>
+                    <form id="formServico" class="row g-2">
+                        <div class="col-md-3"><select class="form-select" id="servCliId" required><option value="">Cliente...</option></select></div>
+                        <div class="col-md-3"><input class="form-control" id="servTipo" placeholder="Tipo (Desbloqueio, CTC...)" required></div>
+                        <div class="col-md-1"><input type="number" step="0.01" class="form-control" id="servValor" placeholder="R$" value="0"></div>
+                        <div class="col-md-2"><div class="form-check form-switch mt-2"><input class="form-check-input" type="checkbox" id="servPago"><label class="form-check-label" for="servPago">Pago</label></div></div>
+                        <div class="col-md-3"><input class="form-control" id="servObs" placeholder="Observações"></div>
+                        <div class="col-12"><button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Salvar Serviço</button></div>
+                    </form>
+                </div>
+                <div class="card-custom card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list me-2"></i>Serviços</span>
+                        <select class="filtro-select" id="filtroServStatus" onchange="carregarServicos()">
+                            <option value="todos">Todos</option>
+                            <option value="Pendente">Pendentes</option>
+                            <option value="Concluído">Concluídos</option>
+                            <option value="nao_pago">Não Pagos</option>
+                            <option value="pago">Pagos</option>
+                        </select>
+                    </div>
+                    <div class="card-body" id="servicosLista"><p class="text-muted mb-0">Carregando...</p></div>
+                </div>
+            </div>
+
+            <!-- EMPRÉSTIMOS -->
+            <div id="page-emprestimos" class="section-page">
+                <div class="form-section">
+                    <h5>Adicionar Empréstimo</h5>
+                    <form id="formEmprestimo" class="row g-2">
+                        <div class="col-md-3"><select class="form-select" id="empCliId" required><option value="">Cliente...</option></select></div>
+                        <div class="col-md-2"><input type="number" step="0.01" class="form-control" id="empValor" placeholder="Valor R$" required></div>
+                        <div class="col-md-1"><input type="number" step="0.01" class="form-control" id="empComissao" placeholder="Comissão R$" value="0"></div>
+                        <div class="col-md-2"><input class="form-control" id="empBanco" placeholder="Banco" required></div>
+                        <div class="col-md-1"><input type="number" class="form-control" id="empParcelas" placeholder="Parcelas" required></div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Salvar Empréstimo</button></div>
+                    </form>
+                </div>
+                <div class="card-custom card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list me-2"></i>Empréstimos</span>
+                        <select class="filtro-select" id="filtroEmpStatus" onchange="carregarEmprestimos()">
+                            <option value="todos">Todos</option>
+                            <option value="Pendente">Pendentes</option>
+                            <option value="Concluído">Concluídos</option>
+                        </select>
+                    </div>
+                    <div class="card-body" id="emprestimosLista"><p class="text-muted mb-0">Carregando...</p></div>
+                </div>
+            </div>
+
+            <!-- MINHA RECEITA -->
+            <div id="page-receita" class="section-page">
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6"><div class="stat-card text-center"><p class="stat-label">Receita Serviços (mês)</p><p class="stat-value text-success" id="recServMes">-</p></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card text-center"><p class="stat-label">Receita Serviços (total)</p><p class="stat-value text-primary" id="recServTotal">-</p></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card text-center"><p class="stat-label">Comissão Empr. (mês)</p><p class="stat-value text-success" id="recComissaoMes">-</p></div></div>
+                    <div class="col-md-3 col-6"><div class="stat-card text-center"><p class="stat-label">Comissão Empr. (total)</p><p class="stat-value text-primary" id="recComissaoTotal">-</p></div></div>
+                </div>
+                <div class="row g-3 mb-3">
+                    <div class="col-md-4 col-6"><div class="stat-card text-center"><p class="stat-label">Total Movimentado Empr.</p><p class="stat-value" id="recEmpTotal">-</p></div></div>
+                    <div class="col-md-4 col-6"><div class="stat-card text-center bg-light"><p class="stat-label">Movimentado (mês)</p><p class="stat-value" id="recEmpMes">-</p></div></div>
+                    <div class="col-md-4 col-6"><div class="stat-card text-center"><p class="stat-label">A Receber (serviços)</p><p class="stat-value text-danger" id="recAReceber">-</p></div></div>
+                </div>
+                <div class="card-custom card mb-3">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-bar-chart me-2"></i>Receita de Serviços por Tipo</span>
+                        <div><button class="btn btn-sm btn-outline-primary me-1" onclick="carregarReceita('mes')">30 dias</button><button class="btn btn-sm btn-primary" onclick="carregarReceita('total')">Total</button></div>
+                    </div>
+                    <div class="card-body" id="receitaTabela"><p class="text-muted mb-0">Carregando...</p></div>
+                </div>
+                <div class="card-custom card">
+                    <div class="card-header"><i class="bi bi-clock-history me-2"></i>Últimos Serviços com Valor</div>
+                    <div class="card-body" id="receitaUltimos"><p class="text-muted mb-0">Carregando...</p></div>
+                </div>
+            </div>
+
+            <!-- RELATÓRIOS -->
+            <div id="page-relatorios" class="section-page">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card-custom card">
+                            <div class="card-header"><i class="bi bi-download me-2"></i>Exportar</div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <button class="btn btn-outline-primary" onclick="exportarCSV('clientes')"><i class="bi bi-filetype-csv me-2"></i>Clientes (CSV)</button>
+                                    <button class="btn btn-outline-success" onclick="exportarCSV('relatorio')"><i class="bi bi-filetype-csv me-2"></i>Relatório Geral (CSV)</button>
+                                    <button class="btn btn-outline-warning" onclick="exportarCSV('receita-csv')"><i class="bi bi-filetype-csv me-2"></i>Receita Serviços (CSV)</button>
+                                    <button class="btn btn-outline-danger" onclick="gerarPDF()"><i class="bi bi-filetype-pdf me-2"></i>Relatório Completo (PDF)</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card-custom card">
+                            <div class="card-header"><i class="bi bi-pie-chart me-2"></i>Resumo Financeiro</div>
+                            <div class="card-body" id="relatorioResumo"><p class="text-muted mb-0">Carregando...</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LOGS -->
+            <div id="page-logs" class="section-page">
+                <div class="card-custom card">
+                    <div class="card-header"><i class="bi bi-clock-history me-2"></i>Atividades</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm"><thead><tr><th>Data</th><th>Usuário</th><th>Ação</th><th>Entidade</th><th>Detalhes</th></tr></thead><tbody id="logsBody"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL HISTÓRICO -->
+    <div class="modal fade modal-custom" id="modalHistorico" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title" id="modalTitle">Histórico</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <div id="modalInfo" class="mb-3 p-3 bg-light rounded"></div>
+                    <h6 class="fw-bold mb-2"><i class="bi bi-gear me-1"></i>Serviços INSS</h6>
+                    <div id="modalServicos" class="mb-3"></div>
+                    <h6 class="fw-bold mb-2"><i class="bi bi-cash-stack me-1"></i>Empréstimos</h6>
+                    <div id="modalEmprestimos"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+        const API = 'http://127.0.0.1:8000';
+        let TOKEN = localStorage.getItem('credmax_token');
+        let USER = null, clientesGlobais = [], chartServicos = null;
+
+        function toast(msg, tipo='success') {
+            const c = document.getElementById('toastContainer');
+            const t = document.createElement('div');
+            t.className = `toast-custom ${tipo}`;
+            const icons = {success:'bi-check-circle-fill text-success',error:'bi-x-circle-fill text-danger',warning:'bi-exclamation-triangle-fill text-warning'};
+            t.innerHTML = `<i class="bi ${icons[tipo]||icons.success}"></i><span>${esc(msg)}</span>`;
+            c.appendChild(t);
+            t.style.transform='translateX(120%)';
+            requestAnimationFrame(()=>{t.style.transform='translateX(0)';t.style.transition='transform 0.35s cubic-bezier(0.4,0,0.2,1)'});
+            setTimeout(()=>{t.style.transform='translateX(120%)';t.style.opacity='0';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),350);},3500);
+        }
+
+        async function api(method, path, data=null) {
+            const opts = {method,headers:{'Content-Type':'application/json'}};
+            if (TOKEN) opts.headers['Authorization'] = `Bearer ${TOKEN}`;
+            if (data) opts.body = JSON.stringify(data);
+            const r = await fetch(`${API}${path}`, opts);
+            if (r.status===429) {const e=await r.json().catch(()=>({})); throw new Error(e.detail||'Muitas tentativas');}
+            if (r.status===401 && path!=='/auth/login') {logout(); throw new Error('Sessão expirada');}
+            const ct=r.headers.get('content-type')||'';
+            if (ct.includes('json')) return r.json();
+            if (ct.includes('csv')) return r.text();
+            if (!r.ok) {const e=await r.json().catch(()=>({})); throw new Error(e.detail||`Erro ${r.status}`);}
+            return r.text();
+        }
+
+        function fmtData(d) { return d ? new Date(d).toLocaleString('pt-BR') : '-'; }
+        function fmtVal(v) { return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
+        function esc(s) { const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
+
+        // AUTH
+        document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+            e.preventDefault();
+            const errDiv=document.getElementById('loginError');
+            errDiv.classList.add('d-none');
+            try {
+                const r=await api('POST','/auth/login',{username:document.getElementById('loginUser').value,password:document.getElementById('loginPass').value});
+                TOKEN=r.access_token; USER=r.usuario;
+                localStorage.setItem('credmax_token',TOKEN);
+                localStorage.setItem('credmax_user',JSON.stringify(USER));
+                document.getElementById('loginPage').style.display='none';
+                document.getElementById('appLayout').style.display='flex';
+                document.getElementById('userDisplayName').textContent=USER.nome;
+                document.getElementById('footerUsername').textContent=USER.nome;
+                document.getElementById('userAvatar').textContent=USER.nome.charAt(0).toUpperCase();
+                carregarTudo();
+                toast(`Bem-vindo, ${USER.nome}!`);
+            } catch(err) { errDiv.textContent=err.message; errDiv.classList.remove('d-none'); }
+        });
+        function logout() {
+            TOKEN=null;USER=null;
+            localStorage.removeItem('credmax_token');localStorage.removeItem('credmax_user');
+            document.getElementById('appLayout').style.display='none';
+            document.getElementById('loginPage').style.display='flex';
+        }
+        (function init(){
+            const s=localStorage.getItem('credmax_token'),u=localStorage.getItem('credmax_user');
+            if(s&&u){TOKEN=s;USER=JSON.parse(u);
+                document.getElementById('loginPage').style.display='none';
+                document.getElementById('appLayout').style.display='flex';
+                document.getElementById('userDisplayName').textContent=USER.nome;
+                document.getElementById('footerUsername').textContent=USER.nome;
+                document.getElementById('userAvatar').textContent=USER.nome.charAt(0).toUpperCase();
+                carregarTudo();
+            }
+        })();
+
+        // NAVEGAÇÃO
+        document.querySelectorAll('.sidebar-nav .nav-link').forEach(link=>{
+            link.addEventListener('click',async ()=>{
+                document.querySelectorAll('.sidebar-nav .nav-link').forEach(l=>l.classList.remove('active'));
+                link.classList.add('active');
+                const page=link.dataset.page;
+                document.querySelectorAll('.section-page').forEach(p=>p.classList.remove('active'));
+                const el=document.getElementById(`page-${page}`);
+                if(el)el.classList.add('active');
+                const titles={dashboard:'Dashboard',clientes:'Clientes',servicos:'Serviços INSS',emprestimos:'Empréstimos',receita:'Minha Receita',relatorios:'Relatórios',logs:'Auditoria'};
+                document.getElementById('pageTitle').textContent=titles[page]||page;
+                document.getElementById('sidebar').classList.remove('show');
+                if(page==='dashboard') carregarDashboard();
+                if(page==='clientes') carregarClientes();
+                if(page==='servicos') carregarServicos();
+                if(page==='emprestimos') carregarEmprestimos();
+                if(page==='receita') carregarReceita('total');
+                if(page==='relatorios') carregarRelatorios();
+                if(page==='logs') carregarLogs();
+            });
+        });
+        document.getElementById('sidebarToggle').addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('show');});
+
+        // DASHBOARD
+        async function carregarDashboard() {
+            try {
+                const d=await api('GET','/dashboard');
+                document.getElementById('dashTotalClientes').textContent=d.total_clientes;
+                document.getElementById('dashPendencias').textContent=d.pendencias_totais;
+                document.getElementById('dashReceitaMes').textContent=fmtVal(d.receita_servicos_mes);
+                document.getElementById('dashAReceber').textContent=fmtVal(d.servicos_a_receber);
+                document.getElementById('dashEmpMes').textContent=fmtVal(d.total_emprestimos_mes);
+                document.getElementById('dashComissaoMes').textContent=fmtVal(d.comissao_mes);
+                document.getElementById('dashComissaoTotal').textContent=fmtVal(d.comissao_total);
+
+                const pend=await api('GET','/clientes/pendentes');
+                const pDiv=document.getElementById('dashPendenciasLista');
+                if(!pend.length) pDiv.innerHTML='<p class="text-muted mb-0">Nenhuma pendência!</p>';
+                else pDiv.innerHTML=pend.map(c=>`<div class="d-flex justify-content-between align-items-center py-1 border-bottom"><span><strong>${esc(c.nome)}</strong><br><small class="text-muted">${esc(c.cpf)}</small></span><button class="btn btn-sm btn-outline-primary" onclick="abrirHistorico(${c.id})">Ver</button></div>`).join('');
+
+                const receita=await api('GET','/receita-servicos?periodo=total');
+                if(chartServicos)chartServicos.destroy();
+                const ctx=document.getElementById('chartServicos').getContext('2d');
+                const labels=receita.map(r=>r.tipo);
+                const recebido=receita.map(r=>r.recebido);
+                const aReceber=receita.map(r=>r.a_receber);
+                chartServicos=new Chart(ctx,{
+                    type:'bar',
+                    data:{labels:labels.length?labels:['Sem dados'],datasets:[{label:'Recebido',data:recebido.length?recebido:[0],backgroundColor:'#198754'},{label:'A Receber',data:aReceber.length?aReceber:[0],backgroundColor:'#dc3545'}]},
+                    options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true}}}
+                });
+            } catch(err){toast('Erro no dashboard','error');}
+        }
+
+        // CLIENTES
+        let filtroClientes='todos';
+        async function carregarClientes(){try{clientesGlobais=await api('GET','/clientes/');atualizarSelects();aplicarFiltro();}catch(e){toast('Erro','error');}}
+        function aplicarFiltro(){
+            if(filtroClientes==='todos') renderizarClientes(clientesGlobais);
+            else if(filtroClientes==='pendentes') carregarPendentes();
+            else if(filtroClientes==='devendo') carregarDevendo();
+        }
+        async function carregarPendentes(){try{renderizarClientes(await api('GET','/clientes/pendentes'),true);}catch(e){}}
+        async function carregarDevendo(){
+            try{
+                const dev=[];
+                for(const c of clientesGlobais){const h=await api('GET',`/clientes/${c.id}/historico`);if(h.servicos.some(s=>!s.pago&&s.valor_cobrado>0))dev.push(c);}
+                renderizarClientes(dev,false,true);
+            }catch(e){}
+        }
+        function renderizarClientes(lista,isPendente=false){
+            const div=document.getElementById('clientesLista');
+            if(!lista.length){div.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum cliente.</p></div>';return;}
+            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
+        }
+        function filtrarClientes(modo){
+            filtroClientes=modo;
+            document.getElementById('tabClientesTodos').classList.toggle('active',modo==='todos');
+            document.getElementById('tabClientesPendentes').classList.toggle('active',modo==='pendentes');
+            const td=document.getElementById('tabClientesDevendo');
+            if(td)td.classList.toggle('active',modo==='devendo');
+            aplicarFiltro();
+        }
+        function alternarAbaPendentes(){filtrarClientes(filtroClientes==='pendentes'?'todos':'pendentes');}
+        function alternarAbaDevendo(){filtrarClientes(filtroClientes==='devendo'?'todos':'devendo');}
+        async function buscarClientes(){
+            const q=document.getElementById('searchCliente').value.trim().toLowerCase();
+            if(!q&&filtroClientes==='todos'){renderizarClientes(clientesGlobais);return;}
+            let lista=clientesGlobais;
+            if(filtroClientes==='pendentes'){try{lista=await api('GET','/clientes/pendentes');}catch(e){}}
+            if(filtroClientes==='devendo'){
+                const dev=[];
+                for(const c of clientesGlobais){try{const h=await api('GET',`/clientes/${c.id}/historico`);if(h.servicos.some(s=>!s.pago&&s.valor_cobrado>0))dev.push(c);}catch(e){}}
+                lista=dev;
+            }
+            if(q)lista=lista.filter(c=>c.nome.toLowerCase().includes(q)||c.cpf.includes(q));
+            renderizarClientes(lista,filtroClientes==='pendentes');
+        }
+        document.getElementById('formCliente').addEventListener('submit',async(e)=>{
+            e.preventDefault();
+            try{
+                await api('POST','/clientes/',{nome:document.getElementById('cliNome').value,cpf:document.getElementById('cliCPF').value,telefone:document.getElementById('cliTel').value,email:document.getElementById('cliEmail').value||null,data_nascimento:document.getElementById('cliNasc').value||null,endereco:document.getElementById('cliEnd').value||null,observacoes:document.getElementById('cliObs').value||null});
+                document.getElementById('formCliente').reset();
+                document.getElementById('formNovoCliente').classList.remove('show');
+                toast('Cliente cadastrado!');carregarClientes();carregarDashboard();
+            }catch(err){toast(err.message,'error');}
+        });
+        async function excluirCliente(id){if(!confirm('Excluir cliente?'))return;try{await api('DELETE',`/clientes/${id}`);toast('Excluído.');carregarClientes();carregarDashboard();}catch(err){toast(err.message,'error');}}
+
+        // SERVIÇOS
+        async function carregarServicos(){
+            try{
+                const clientes=await api('GET','/clientes/');
+                document.getElementById('servCliId').innerHTML='<option value="">Selecione...</option>'+clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+                const servicos=await api('GET','/servicos/');
+                const filtro=document.getElementById('filtroServStatus').value;
+                let f=servicos;
+                if(filtro==='Pendente') f=servicos.filter(s=>s.status==='Pendente');
+                else if(filtro==='Concluído') f=servicos.filter(s=>s.status==='Concluído');
+                else if(filtro==='pago') f=servicos.filter(s=>s.pago);
+                else if(filtro==='nao_pago') f=servicos.filter(s=>!s.pago&&s.valor_cobrado>0);
+                const div=document.getElementById('servicosLista');
+                if(!f.length){div.innerHTML='<p class="text-muted mb-0">Nenhum serviço.</p>';return;}
+                div.innerHTML=f.map(s=>{
+                    const c=clientes.find(c=>c.id===s.cliente_id);
+                    const val=s.valor_cobrado>0?fmtVal(s.valor_cobrado):'';
+                    return `<div class="item-row">
+                        <div class="item-info">
+                            <strong>${esc(s.tipo_servico)}</strong> <small class="text-muted">${c?esc(c.nome):'-'}</small>
+                            ${val?`<span class="fw-bold ${s.pago?'text-success':'text-danger'}">${val}</span>`:''}
+                            <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'} ms-1">${s.pago?'PAGO':'DEVENDO'}</span>
+                            <span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'} ms-1">${esc(s.status)}</span>
+                            <br><small class="text-muted">${fmtData(s.data_cadastro)}</small>
+                        </div>
+                        <div class="item-acoes">
+                            ${s.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirServico(${s.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
+                            ${!s.pago&&s.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="marcarPago(${s.id})" title="Pago"><i class="bi bi-cash"></i></button>`:''}
+                            <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirServicoItem(${s.id})" title="Excluir"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }catch(err){toast('Erro ao carregar serviços','error');}
+        }
+        document.getElementById('formServico').addEventListener('submit',async(e)=>{
+            e.preventDefault();
+            try{
+                await api('POST','/servicos/',{cliente_id:parseInt(document.getElementById('servCliId').value),tipo_servico:document.getElementById('servTipo').value,valor_cobrado:parseFloat(document.getElementById('servValor').value)||0,pago:document.getElementById('servPago').checked,observacoes:document.getElementById('servObs').value||null});
+                document.getElementById('formServico').reset();document.getElementById('servValor').value='0';document.getElementById('servPago').checked=false;
+                toast('Serviço cadastrado!');carregarServicos();carregarDashboard();
+            }catch(err){toast(err.message,'error');}
+        });
+        async function concluirServico(id){try{await api('PUT',`/servicos/${id}/concluir`);toast('Concluído!');carregarServicos();carregarDashboard();}catch(err){toast(err.message,'error');}}
+        async function marcarPago(id){try{await api('PUT',`/servicos/${id}/pagar`);toast('Pago!');carregarServicos();carregarDashboard();}catch(err){toast(err.message,'error');}}
+        async function excluirServicoItem(id){if(!confirm('Excluir?'))return;try{await api('DELETE',`/servicos/${id}`);toast('Excluído.');carregarServicos();}catch(err){toast(err.message,'error');}}
+
+        // EMPRÉSTIMOS
+        async function carregarEmprestimos(){
+            try{
+                const clientes=await api('GET','/clientes/');
+                const sel=document.getElementById('empCliId');
+                sel.innerHTML='<option value="">Selecione...</option>'+clientes.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+
+                const emps=[];
+                for(const c of clientes){
+                    try{const h=await api('GET',`/clientes/${c.id}/historico`);h.emprestimos.forEach(e=>{e.cliente_nome=c.nome;emps.push(e);});}catch(e){}
+                }
+                emps.sort((a,b)=>b.id-a.id);
+                const filtro=document.getElementById('filtroEmpStatus').value;
+                let f=emps;
+                if(filtro==='Pendente') f=emps.filter(e=>e.status==='Pendente');
+                else if(filtro==='Concluído') f=emps.filter(e=>e.status==='Concluído');
+
+                const div=document.getElementById('emprestimosLista');
+                if(!f.length){div.innerHTML='<p class="text-muted mb-0">Nenhum empréstimo.</p>';return;}
+                div.innerHTML=f.map(e=>{
+                    const val=fmtVal(e.valor);
+                    const com=e.comissao>0?`Comissão: ${fmtVal(e.comissao)}`:'';
+                    return `<div class="item-row">
+                        <div class="item-info">
+                            <strong>${esc(e.banco)}</strong> - ${val} (${e.parcelas}x)
+                            ${com?`<br><small class="text-success">${com}</small>`:''}
+                            <br><span class="badge badge-${e.status==='Concluído'?'concluido':'pendente'}">${esc(e.status)}</span>
+                            <small class="text-muted ms-2">${fmtData(e.data_cadastro)}</small>
+                        </div>
+                        <div class="item-acoes">
+                            ${e.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirEmprestimo(${e.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
+                            <button class="btn btn-sm btn-outline-primary btn-action" onclick="editarComissao(${e.id})" title="Editar Comissão"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirEmprestimoItem(${e.id})" title="Excluir"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }catch(err){toast('Erro ao carregar empréstimos','error');}
+        }
+        document.getElementById('formEmprestimo').addEventListener('submit',async(e)=>{
+            e.preventDefault();
+            try{
+                await api('POST','/emprestimos/',{cliente_id:parseInt(document.getElementById('empCliId').value),valor:parseFloat(document.getElementById('empValor').value),comissao:parseFloat(document.getElementById('empComissao').value)||0,banco:document.getElementById('empBanco').value,parcelas:parseInt(document.getElementById('empParcelas').value)});
+                document.getElementById('formEmprestimo').reset();document.getElementById('empComissao').value='0';
+                toast('Empréstimo cadastrado!');carregarEmprestimos();carregarDashboard();
+            }catch(err){toast(err.message,'error');}
+        });
+        async function concluirEmprestimo(id){if(!confirm('Confirmar averbação?'))return;try{await api('PUT',`/emprestimos/${id}/concluir`);toast('Concluído!');carregarEmprestimos();carregarDashboard();}catch(err){toast(err.message,'error');}}
+        async function editarComissao(id){
+            const val=prompt('Valor da comissão (R$):');
+            if(val===null||isNaN(parseFloat(val)))return;
+            try{await api('PUT',`/emprestimos/${id}`,{comissao:parseFloat(val)});toast('Comissão atualizada!');carregarEmprestimos();carregarDashboard();}catch(err){toast(err.message,'error');}
+        }
+        async function excluirEmprestimoItem(id){if(!confirm('Excluir?'))return;try{await api('DELETE',`/emprestimos/${id}`);toast('Excluído.');carregarEmprestimos();}catch(err){toast(err.message,'error');}}
+
+        // HISTÓRICO MODAL
+        async function abrirHistorico(id){
+            try{
+                const h=await api('GET',`/clientes/${id}/historico`);
+                document.getElementById('modalTitle').textContent=`Histórico: ${esc(h.cliente_nome)}`;
+                document.getElementById('modalInfo').innerHTML=`<strong>CPF:</strong> ${esc(h.cpf)} | <strong>Tel:</strong> ${esc(h.telefone)}${h.email?' | <strong>Email:</strong> '+esc(h.email):''}`;
+                const sDiv=document.getElementById('modalServicos');
+                if(!h.servicos.length) sDiv.innerHTML='<p class="text-muted">Nenhum serviço.</p>';
+                else sDiv.innerHTML=h.servicos.map(s=>{
+                    const val=s.valor_cobrado>0?`<strong>${fmtVal(s.valor_cobrado)}</strong>`:'';
+                    return `<div class="item-row">
+                        <div class="item-info">${esc(s.tipo_servico)} ${val} <span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'}">${esc(s.status)}</span> <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':s.valor_cobrado>0?'DEVENDO':'-'}</span><br><small class="text-muted">${fmtData(s.data_cadastro)}</small></div>
+                        <div class="item-acoes">
+                            ${s.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirServicoModal(${s.id},${id})"><i class="bi bi-check-lg"></i></button>`:''}
+                            ${!s.pago&&s.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="marcarPagoModal(${s.id},${id})"><i class="bi bi-cash"></i></button>`:''}
+                            <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirServicoModal(${s.id},${id})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+                const eDiv=document.getElementById('modalEmprestimos');
+                if(!h.emprestimos.length) eDiv.innerHTML='<p class="text-muted">Nenhum empréstimo.</p>';
+                else eDiv.innerHTML=h.emprestimos.map(e=>{
+                    const val=fmtVal(e.valor);
+                    const com=e.comissao>0?` | Comissão: ${fmtVal(e.comissao)}`:'';
+                    return `<div class="item-row">
+                        <div class="item-info">${esc(e.banco)} - ${val} (${e.parcelas}x)${com}<br><span class="badge badge-${e.status==='Concluído'?'concluido':'pendente'}">${esc(e.status)}</span> <small class="text-muted">${fmtData(e.data_cadastro)}</small></div>
+                        <div class="item-acoes">
+                            ${e.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirEmpModal(${e.id},${id})"><i class="bi bi-check-lg"></i></button>`:''}
+                            <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirEmpModal(${e.id},${id})"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+                new bootstrap.Modal(document.getElementById('modalHistorico')).show();
+            }catch(err){toast('Erro ao carregar histórico','error');}
+        }
+        async function concluirServicoModal(sid,cid){try{await api('PUT',`/servicos/${sid}/concluir`);toast('Concluído!');abrirHistorico(cid);carregarServicos();carregarDashboard();}catch(e){toast(e.message,'error');}}
+        async function marcarPagoModal(sid,cid){try{await api('PUT',`/servicos/${sid}/pagar`);toast('Pago!');abrirHistorico(cid);carregarServicos();carregarDashboard();}catch(e){toast(e.message,'error');}}
+        async function excluirServicoModal(sid,cid){if(!confirm('Excluir?'))return;try{await api('DELETE',`/servicos/${sid}`);toast('Excluído.');abrirHistorico(cid);carregarServicos();}catch(e){toast(e.message,'error');}}
+        async function concluirEmpModal(eid,cid){try{await api('PUT',`/emprestimos/${eid}/concluir`);toast('Concluído!');abrirHistorico(cid);carregarEmprestimos();carregarDashboard();}catch(e){toast(e.message,'error');}}
+        async function excluirEmpModal(eid,cid){if(!confirm('Excluir?'))return;try{await api('DELETE',`/emprestimos/${eid}`);toast('Excluído.');abrirHistorico(cid);carregarEmprestimos();}catch(e){toast(e.message,'error');}}
+
+        // RECEITA
+        async function carregarReceita(periodo='total'){
+            try{
+                const d=await api('GET','/dashboard');
+                document.getElementById('recServMes').textContent=fmtVal(d.receita_servicos_mes);
+                document.getElementById('recServTotal').textContent=fmtVal(d.receita_servicos_total);
+                document.getElementById('recComissaoMes').textContent=fmtVal(d.comissao_mes);
+                document.getElementById('recComissaoTotal').textContent=fmtVal(d.comissao_total);
+                document.getElementById('recEmpTotal').textContent=fmtVal(d.total_emprestimos);
+                document.getElementById('recEmpMes').textContent=fmtVal(d.total_emprestimos_mes);
+                document.getElementById('recAReceber').textContent=fmtVal(d.servicos_a_receber);
+
+                const receita=await api('GET',`/receita-servicos?periodo=${periodo}`);
+                const div=document.getElementById('receitaTabela');
+                if(!receita.length){div.innerHTML='<p class="text-muted mb-0">Nenhum serviço neste período.</p>';return;}
+                div.innerHTML=`<div class="table-responsive"><table class="table table-hover table-sm"><thead><tr><th>Tipo</th><th>Qtd</th><th>Total</th><th>Recebido</th><th>A Receber</th></tr></thead><tbody>${receita.map(r=>`<tr><td>${esc(r.tipo)}</td><td>${r.quantidade}</td><td>${fmtVal(r.total)}</td><td class="text-success fw-bold">${fmtVal(r.recebido)}</td><td class="text-danger fw-bold">${fmtVal(r.a_receber)}</td></tr>`).join('')}</tbody></table></div>`;
+
+                const servicos=await api('GET','/servicos/');
+                const cv=servicos.filter(s=>s.valor_cobrado>0).slice(0,30);
+                const uDiv=document.getElementById('receitaUltimos');
+                uDiv.innerHTML=cv.length?cv.map(s=>`<div class="item-row"><div class="item-info"><strong>${esc(s.tipo_servico)}</strong> ${fmtVal(s.valor_cobrado)} <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':'DEVENDO'}</span><br><small class="text-muted">${fmtData(s.data_cadastro)}</small></div></div>`).join(''):'<p class="text-muted mb-0">Nenhum serviço com valor.</p>';
+            }catch(err){toast('Erro ao carregar receita','error');}
+        }
+
+        // RELATÓRIOS
+        async function carregarRelatorios(){
+            try{
+                const d=await api('GET','/dashboard');
+                document.getElementById('relatorioResumo').innerHTML=`<div class="row g-2">
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">Clientes</small><br><strong>${d.total_clientes}</strong></div></div>
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">A Receber (serv.)</small><br><strong class="text-danger">${fmtVal(d.servicos_a_receber)}</strong></div></div>
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">Receita Serv. Total</small><br><strong class="text-success">${fmtVal(d.receita_servicos_total)}</strong></div></div>
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">Comissão Total</small><br><strong class="text-success">${fmtVal(d.comissao_total)}</strong></div></div>
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">Movimentado Empr.</small><br><strong>${fmtVal(d.total_emprestimos)}</strong></div></div>
+                    <div class="col-6"><div class="p-2 bg-light rounded"><small class="text-muted">Empréstimos (mês)</small><br><strong>${fmtVal(d.total_emprestimos_mes)}</strong></div></div>
+                </div>`;
+            }catch(err){}
+        }
+        async function exportarCSV(tipo){
+            try{
+                const r=await fetch(`${API}/exportar/${tipo}`,{headers:{'Authorization':`Bearer ${TOKEN}`}});
+                const blob=await r.blob();const url=URL.createObjectURL(blob);
+                const a=document.createElement('a');a.href=url;a.download=`${tipo}_${new Date().toISOString().slice(0,10)}.csv`;
+                a.click();URL.revokeObjectURL(url);toast('Download iniciado!');
+            }catch(err){toast('Erro ao exportar','error');}
+        }
+        function _fmtPct(v, total) { return total > 0 ? ((v/total)*100).toFixed(1) + '%' : '-'; }
+        async function gerarPDF(){
+            try{
+                const [d, clientes, servicos, receita] = await Promise.all([
+                    api('GET','/dashboard'),
+                    api('GET','/clientes/'),
+                    api('GET','/servicos/'),
+                    api('GET','/receita-servicos?periodo=total')
+                ]);
+                const emprestimos = [];
+                for (const c of clientes) {
+                    try { const h=await api('GET',`/clientes/${c.id}/historico`); h.emprestimos.forEach(e=>{e.cliente_nome=c.nome;emprestimos.push(e);}); } catch(e) {}
+                }
+                emprestimos.sort((a,b)=>b.id-a.id);
+
+                const servPendPag = servicos.filter(s=>s.valor_cobrado>0&&!s.pago);
+                const servConcluidos = servicos.filter(s=>s.status==='Concluído');
+                const empPendentes = emprestimos.filter(e=>e.status==='Pendente');
+                const empConcluidos = emprestimos.filter(e=>e.status==='Concluído');
+                const totalComissoes = emprestimos.reduce((s,e)=>s+(e.comissao||0),0);
+                const comissaoPend = emprestimos.filter(e=>e.status==='Pendente').reduce((s,e)=>s+(e.comissao||0),0);
+
+                const page=window.open('','_blank');
+                page.document.write(`<html><head><title>Credmax - Relatório</title>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"><\/script>
+                <style>
+                    *{box-sizing:border-box;margin:0;padding:0}
+                    body{font-family:'Segoe UI',Arial,sans-serif;padding:30px 40px;color:#222;font-size:13px;line-height:1.5}
+                    h1{font-size:26px;color:#0d6efd;display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:3px solid #0d6efd;margin-bottom:8px}
+                    h1 small{font-size:13px;color:#999;font-weight:400;margin-left:auto}
+                    .subtitle{color:#666;font-size:13px;margin-bottom:24px}
+                    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
+                    .card{border:1px solid #e0e0e0;border-radius:10px;padding:16px;text-align:center;background:#fafafa}
+                    .card .label{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#888;margin-bottom:4px}
+                    .card .value{font-size:22px;font-weight:700;color:#1a1a2e}
+                    .card .value.green{color:#198754}.card .value.red{color:#dc3545}.card .value.blue{color:#0d6efd}
+                    h2{font-size:18px;color:#1a1a2e;margin:28px 0 12px;padding-bottom:6px;border-bottom:1px solid #e0e0e0}
+                    h3{font-size:14px;color:#444;margin:16px 0 8px}
+                    .chart-wrap{max-width:600px;margin:16px auto}
+                    table{width:100%;border-collapse:collapse;margin:8px 0 16px;font-size:12px}
+                    th{background:#0d6efd;color:#fff;padding:8px 10px;text-align:left;font-weight:600}
+                    td{padding:6px 10px;border-bottom:1px solid #eee}
+                    tr:nth-child(even){background:#f8f9fa}
+                    .pago{color:#198754;font-weight:600}.devendo{color:#dc3545;font-weight:600}
+                    .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+                    .badge-pendente{background:#fff3cd;color:#856404}.badge-concluido{background:#d1e7dd;color:#0f5132}
+                    .badge-pago{background:#d1e7dd;color:#0f5132}.badge-nao-pago{background:#f8d7da;color:#842029}
+                    .footer{text-align:center;margin-top:32px;padding-top:16px;border-top:1px solid #ddd;color:#aaa;font-size:11px}
+                    .print-btn{display:block;margin:24px auto;padding:12px 40px;background:#0d6efd;color:#fff;border:none;border-radius:8px;font-size:16px;cursor:pointer}
+                    @media print{.print-btn{display:none}body{padding:15px}}
+                    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+                </style></head><body>
+                <h1>Credmax <small>Relatório Gerencial</small></h1>
+                <p class="subtitle">Gerado em ${new Date().toLocaleString('pt-BR')}</p>
+
+                <div class="cards">
+                    <div class="card"><div class="label">Clientes</div><div class="value blue">${d.total_clientes}</div></div>
+                    <div class="card"><div class="label">Receita Serviços (Total)</div><div class="value green">${fmtVal(d.receita_servicos_total)}</div></div>
+                    <div class="card"><div class="label">Comissão Total</div><div class="value green">${fmtVal(totalComissoes)}</div></div>
+                    <div class="card"><div class="label">A Receber</div><div class="value red">${fmtVal(d.servicos_a_receber)}</div></div>
+                    <div class="card"><div class="label">Empréstimos (Mês)</div><div class="value blue">${fmtVal(d.total_emprestimos_mes)}</div></div>
+                    <div class="card"><div class="label">Comissão (Mês)</div><div class="value green">${fmtVal(d.comissao_mes)}</div></div>
+                    <div class="card"><div class="label">Receita Serv. (Mês)</div><div class="value green">${fmtVal(d.receita_servicos_mes)}</div></div>
+                    <div class="card"><div class="label">Total Movimentado Empr.</div><div class="value blue">${fmtVal(d.total_emprestimos)}</div></div>
+                </div>
+
+                <div class="grid-2">
+                    <div>
+                        <h2>Receita por Tipo de Serviço</h2>
+                        <table>
+                            <tr><th>Tipo</th><th>Qtd</th><th>Total</th><th>Recebido</th><th>%</th></tr>
+                            ${receita.map(r=>`<tr><td>${esc(r.tipo)}</td><td>${r.quantidade}</td><td>${fmtVal(r.total)}</td><td class="pago">${fmtVal(r.recebido)}</td><td>${_fmtPct(r.recebido,d.receita_servicos_total)}</td></tr>`).join('')}
+                        </table>
+                    </div>
+                    <div>
+                        <h2>Empréstimos por Status</h2>
+                        <table>
+                            <tr><th>Status</th><th>Qtd</th><th>Total</th><th>Comissão</th></tr>
+                            <tr><td>Concluídos</td><td>${empConcluidos.length}</td><td>${fmtVal(empConcluidos.reduce((s,e)=>s+e.valor,0))}</td><td class="pago">${fmtVal(empConcluidos.reduce((s,e)=>s+(e.comissao||0),0))}</td></tr>
+                            <tr><td>Pendentes</td><td>${empPendentes.length}</td><td>${fmtVal(empPendentes.reduce((s,e)=>s+e.valor,0))}</td><td class="devendo">${fmtVal(comissaoPend)}</td></tr>
+                            <tr style="font-weight:700"><td>Total</td><td>${emprestimos.length}</td><td>${fmtVal(d.total_emprestimos)}</td><td>${fmtVal(totalComissoes)}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="chart-wrap">
+                    <canvas id="chartReceita" height="200"></canvas>
+                </div>
+
+                <h2>Clientes (${clientes.length})</h2>
+                <table>
+                    <tr><th>#</th><th>Nome</th><th>CPF</th><th>Telefone</th><th>Email</th></tr>
+                    ${clientes.map((c,i)=>`<tr><td>${i+1}</td><td>${esc(c.nome)}</td><td>${esc(c.cpf)}</td><td>${esc(c.telefone)}</td><td>${esc(c.email)||'-'}</td></tr>`).join('')}
+                </table>
+
+                <h2>Serviços</h2>
+                <table>
+                    <tr><th>Cliente</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Pagamento</th><th>Data</th></tr>
+                    ${servicos.map(s=>{
+                        const c=clientes.find(x=>x.id===s.cliente_id);
+                        return `<tr><td>${c?esc(c.nome):'-'}</td><td>${esc(s.tipo_servico)}</td><td>${s.valor_cobrado>0?fmtVal(s.valor_cobrado):'-'}</td><td><span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'}">${esc(s.status)}</span></td><td class="${s.pago?'pago':'devendo'}">${s.pago?'PAGO':s.valor_cobrado>0?'DEVENDO':'-'}</td><td>${s.data_cadastro?new Date(s.data_cadastro).toLocaleDateString('pt-BR'):'-'}</td></tr>`;
+                    }).join('')}
+                </table>
+
+                ${servPendPag.length?`<h2>Pendências de Pagamento (${fmtVal(d.servicos_a_receber)})</h2>
+                <table><tr><th>Cliente</th><th>Tipo</th><th>Valor</th></tr>
+                ${servPendPag.map(s=>{const c=clientes.find(x=>x.id===s.cliente_id);return `<tr><td>${c?esc(c.nome):'-'}</td><td>${esc(s.tipo_servico)}</td><td class="devendo">${fmtVal(s.valor_cobrado)}</td></tr>`;}).join('')}
+                </table>`:''}
+
+                ${emprestimos.length?`<h2>Empréstimos</h2>
+                <table><tr><th>Cliente</th><th>Banco</th><th>Valor</th><th>Comissão</th><th>Parcelas</th><th>Status</th><th>Data</th></tr>
+                ${emprestimos.slice(0,100).map(e=>`<tr><td>${esc(e.cliente_nome||'')}</td><td>${esc(e.banco)}</td><td>${fmtVal(e.valor)}</td><td>${e.comissao>0?fmtVal(e.comissao):'-'}</td><td>${e.parcelas}x</td><td><span class="badge badge-${e.status==='Concluído'?'concluido':'pendente'}">${esc(e.status)}</span></td><td>${e.data_cadastro?new Date(e.data_cadastro).toLocaleDateString('pt-BR'):'-'}</td></tr>`).join('')}
+                </table>`:''}
+
+                <div class="footer">Credmax - Sistema de Gestão | Gerado em ${new Date().toLocaleString('pt-BR')}</div>
+                <button class="print-btn" onclick="window.print()">🖨 Salvar como PDF</button>
+
+                <script>
+                    const labels = ${JSON.stringify(receita.map(r=>r.tipo))};
+                    const recebido = ${JSON.stringify(receita.map(r=>r.recebido))};
+                    const aReceber = ${JSON.stringify(receita.map(r=>r.a_receber))};
+                    if (labels.length) {
+                        new Chart(document.getElementById('chartReceita'), {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [
+                                    { label: 'Recebido', data: recebido, backgroundColor: '#198754' },
+                                    { label: 'A Receber', data: aReceber, backgroundColor: '#dc3545' }
+                                ]
+                            },
+                            options: {
+                                responsive: true,
+                                plugins: { legend: { position: 'top' } },
+                                scales: { y: { beginAtZero: true, ticks: { callback: v => 'R$ ' + v.toLocaleString('pt-BR') } } }
+                            }
+                        });
+                    }
+                <\/script>
+                </body></html>`);
+                page.document.close();
+                toast('Relatório aberto! Clique em "Salvar como PDF".');
+            }catch(err){toast('Erro ao gerar PDF','error');}
+        }
+
+        // LOGS
+        async function carregarLogs(){
+            try{
+                const logs=await api('GET','/logs');
+                document.getElementById('logsBody').innerHTML=logs.map(l=>`<tr><td class="text-nowrap">${new Date(l.data_hora).toLocaleString('pt-BR')}</td><td>${esc(l.usuario_nome||'-')}</td><td><span class="badge bg-secondary">${esc(l.acao)}</span></td><td>${esc(l.entidade)}${l.entidade_id?' #'+l.entidade_id:''}</td><td>${esc(l.detalhes||'-')}</td></tr>`).join('');
+            }catch(err){}
+        }
+
+        function atualizarSelects(){
+            const opts=clientesGlobais.map(c=>`<option value="${c.id}">${esc(c.nome)}</option>`).join('');
+            document.getElementById('servCliId').innerHTML='<option value="">Selecione...</option>'+opts;
+            document.getElementById('empCliId').innerHTML='<option value="">Selecione...</option>'+opts;
+        }
+        function carregarTudo(){carregarDashboard();carregarClientes();}
+        function toggleDarkMode(){
+            document.body.classList.toggle('dark-mode');
+            const isDark=document.body.classList.contains('dark-mode');
+            localStorage.setItem('credmax_dark',isDark?'1':'');
+            document.getElementById('darkToggle').innerHTML=isDark?'<i class="bi bi-sun"></i>':'<i class="bi bi-moon-stars"></i>';
+        }
+        (function initDark(){
+            if(localStorage.getItem('credmax_dark')==='1'){document.body.classList.add('dark-mode');
+            document.getElementById('darkToggle').innerHTML='<i class="bi bi-sun"></i>';}
+        })();
+        document.addEventListener('keydown',(e)=>{if(e.ctrlKey&&e.key==='k'){e.preventDefault();document.getElementById('searchCliente')?.focus();}});
+    </script>
+</body>
+</html>

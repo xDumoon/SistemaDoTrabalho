@@ -1,8 +1,5 @@
-# Ignora a pasta do ambiente virtual
 venv/
-
-# Ignora os arquivos de banco de dados locais
 *.db
-
-# Ignora os arquivos de cache do Python
 __pycache__/
+.env
+.DS_Store
