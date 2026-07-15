@@ -98,12 +98,19 @@ def atualizar_servico(
     servico = db.query(ServicoDB).filter(ServicoDB.id == servico_id).first()
     if not servico:
         raise HTTPException(status_code=404, detail="Serviço não encontrado")
+    if dados.tipo_servico is not None:
+        servico.tipo_servico = dados.tipo_servico
+    if dados.valor_cobrado is not None:
+        servico.valor_cobrado = dados.valor_cobrado
     if dados.pago is not None:
         servico.pago = dados.pago
     if dados.status is not None:
         servico.status = dados.status
+    if dados.observacoes is not None:
+        servico.observacoes = dados.observacoes
     db.commit()
     db.refresh(servico)
+    registrar_log(db, usuario, "atualizar", "servico", servico.id, f"Serviço {servico.tipo_servico} atualizado")
     return servico
 
 

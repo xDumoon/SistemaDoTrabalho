@@ -185,6 +185,8 @@
         body.dark-mode .bg-light { background-color: var(--bg-card) !important; color: var(--text-body); }
         body.dark-mode .bg-light strong { color: var(--text-heading); }
         body.dark-mode .bg-light small { color: var(--text-muted); }
+        body.dark-mode .cliente-card strong { color: #ffffff !important; }
+        body.dark-mode .item-row strong { color: #ffffff !important; }
         body.dark-mode .table { --bs-table-bg: transparent; --bs-table-color: var(--text-body); --bs-table-border-color: var(--border); }
         body.dark-mode .table thead th { color: var(--text-muted); border-bottom-color: var(--border); }
         body.dark-mode .table-hover > tbody > tr:hover > * { background-color: rgba(255,255,255,0.03); }
@@ -501,6 +503,75 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR CLIENTE -->
+    <div class="modal fade modal-custom" id="modalEditarCliente" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Editar Cliente</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="formEditarCliente">
+                        <input type="hidden" id="editCliId">
+                        <div class="mb-3"><label class="form-label">Nome</label><input class="form-control" id="editCliNome" required></div>
+                        <div class="mb-3"><label class="form-label">CPF</label><input class="form-control" id="editCliCPF" required></div>
+                        <div class="mb-3"><label class="form-label">Telefone</label><input class="form-control" id="editCliTel" required></div>
+                        <div class="mb-3"><label class="form-label">Email</label><input class="form-control" id="editCliEmail"></div>
+                        <div class="mb-3"><label class="form-label">Nascimento</label><input class="form-control" id="editCliNasc"></div>
+                        <div class="mb-3"><label class="form-label">Endereço</label><input class="form-control" id="editCliEnd"></div>
+                        <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" id="editCliObs" rows="2"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="salvarEdicaoCliente()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR SERVIÇO -->
+    <div class="modal fade modal-custom" id="modalEditarServico" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Editar Serviço</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="formEditarServico">
+                        <input type="hidden" id="editServId">
+                        <div class="mb-3"><label class="form-label">Tipo de Serviço</label><input class="form-control" id="editServTipo" required></div>
+                        <div class="mb-3"><label class="form-label">Valor (R$)</label><input type="number" step="0.01" class="form-control" id="editServValor"></div>
+                        <div class="mb-3"><div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="editServPago"><label class="form-check-label" for="editServPago">Pago</label></div></div>
+                        <div class="mb-3"><label class="form-label">Observações</label><textarea class="form-control" id="editServObs" rows="2"></textarea></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="salvarEdicaoServico()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR EMPRÉSTIMO -->
+    <div class="modal fade modal-custom" id="modalEditarEmprestimo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Editar Empréstimo</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <form id="formEditarEmprestimo">
+                        <input type="hidden" id="editEmpId">
+                        <div class="mb-3"><label class="form-label">Banco</label><input class="form-control" id="editEmpBanco" required></div>
+                        <div class="mb-3"><label class="form-label">Valor (R$)</label><input type="number" step="0.01" class="form-control" id="editEmpValor" required></div>
+                        <div class="mb-3"><label class="form-label">Comissão (R$)</label><input type="number" step="0.01" class="form-control" id="editEmpComissao"></div>
+                        <div class="mb-3"><label class="form-label">Parcelas</label><input type="number" class="form-control" id="editEmpParcelas" required></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="salvarEdicaoEmprestimo()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script>
@@ -665,7 +736,7 @@
         function renderizarClientes(lista,isPendente=false){
             const div=document.getElementById('clientesLista');
             if(!lista.length){div.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum cliente.</p></div>';return;}
-            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
+            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
         }
         function filtrarClientes(modo){
             filtroClientes=modo;
@@ -700,6 +771,33 @@
             }catch(err){toast(err.message,'error');}
         });
         async function excluirCliente(id){if(!confirm('Excluir cliente?'))return;try{await api('DELETE',`/clientes/${id}`);toast('Excluído.');carregarClientes();carregarDashboard();}catch(err){toast(err.message,'error');}}
+        function editarCliente(id){
+            const c=clientesGlobais.find(x=>x.id===id);if(!c)return;
+            document.getElementById('editCliId').value=c.id;
+            document.getElementById('editCliNome').value=c.nome;
+            document.getElementById('editCliCPF').value=c.cpf;
+            document.getElementById('editCliTel').value=c.telefone;
+            document.getElementById('editCliEmail').value=c.email||'';
+            document.getElementById('editCliNasc').value=c.data_nascimento||'';
+            document.getElementById('editCliEnd').value=c.endereco||'';
+            document.getElementById('editCliObs').value=c.observacoes||'';
+            new bootstrap.Modal(document.getElementById('modalEditarCliente')).show();
+        }
+        async function salvarEdicaoCliente(){
+            try{
+                const id=document.getElementById('editCliId').value;
+                await api('PUT',`/clientes/${id}`,{
+                    nome:document.getElementById('editCliNome').value,
+                    telefone:document.getElementById('editCliTel').value,
+                    email:document.getElementById('editCliEmail').value||null,
+                    data_nascimento:document.getElementById('editCliNasc').value||null,
+                    endereco:document.getElementById('editCliEnd').value||null,
+                    observacoes:document.getElementById('editCliObs').value||null
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarCliente')).hide();
+                toast('Cliente atualizado!');carregarClientes();
+            }catch(err){toast(err.message,'error');}
+        }
 
         // SERVIÇOS
         async function carregarServicos(){
@@ -729,6 +827,7 @@
                         <div class="item-acoes">
                             ${s.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirServico(${s.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
                             ${!s.pago&&s.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="marcarPago(${s.id})" title="Pago"><i class="bi bi-cash"></i></button>`:''}
+                            <button class="btn btn-sm btn-outline-warning btn-action" onclick="editarServico(${s.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirServicoItem(${s.id})" title="Excluir"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>`;
@@ -746,6 +845,31 @@
         async function concluirServico(id){try{await api('PUT',`/servicos/${id}/concluir`);toast('Concluído!');carregarServicos();carregarDashboard();}catch(err){toast(err.message,'error');}}
         async function marcarPago(id){try{await api('PUT',`/servicos/${id}/pagar`);toast('Pago!');carregarServicos();carregarDashboard();}catch(err){toast(err.message,'error');}}
         async function excluirServicoItem(id){if(!confirm('Excluir?'))return;try{await api('DELETE',`/servicos/${id}`);toast('Excluído.');carregarServicos();}catch(err){toast(err.message,'error');}}
+        async function editarServico(id){
+            try{
+                const servicos=await api('GET','/servicos/');
+                const s=servicos.find(x=>x.id===id);if(!s)return;
+                document.getElementById('editServId').value=s.id;
+                document.getElementById('editServTipo').value=s.tipo_servico;
+                document.getElementById('editServValor').value=s.valor_cobrado||0;
+                document.getElementById('editServPago').checked=s.pago;
+                document.getElementById('editServObs').value=s.observacoes||'';
+                new bootstrap.Modal(document.getElementById('modalEditarServico')).show();
+            }catch(err){toast(err.message,'error');}
+        }
+        async function salvarEdicaoServico(){
+            try{
+                const id=document.getElementById('editServId').value;
+                await api('PUT',`/servicos/${id}/atualizar`,{
+                    tipo_servico:document.getElementById('editServTipo').value,
+                    valor_cobrado:parseFloat(document.getElementById('editServValor').value)||0,
+                    pago:document.getElementById('editServPago').checked,
+                    observacoes:document.getElementById('editServObs').value||null
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarServico')).hide();
+                toast('Serviço atualizado!');carregarServicos();carregarDashboard();
+            }catch(err){toast(err.message,'error');}
+        }
 
         // EMPRÉSTIMOS
         async function carregarEmprestimos(){
@@ -778,7 +902,7 @@
                         </div>
                         <div class="item-acoes">
                             ${e.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirEmprestimo(${e.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
-                            <button class="btn btn-sm btn-outline-primary btn-action" onclick="editarComissao(${e.id})" title="Editar Comissão"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-warning btn-action" onclick="editarEmprestimo(${e.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirEmprestimoItem(${e.id})" title="Excluir"><i class="bi bi-trash"></i></button>
                         </div>
                     </div>`;
@@ -794,12 +918,34 @@
             }catch(err){toast(err.message,'error');}
         });
         async function concluirEmprestimo(id){if(!confirm('Confirmar averbação?'))return;try{await api('PUT',`/emprestimos/${id}/concluir`);toast('Concluído!');carregarEmprestimos();carregarDashboard();}catch(err){toast(err.message,'error');}}
-        async function editarComissao(id){
-            const val=prompt('Valor da comissão (R$):');
-            if(val===null||isNaN(parseFloat(val)))return;
-            try{await api('PUT',`/emprestimos/${id}`,{comissao:parseFloat(val)});toast('Comissão atualizada!');carregarEmprestimos();carregarDashboard();}catch(err){toast(err.message,'error');}
-        }
         async function excluirEmprestimoItem(id){if(!confirm('Excluir?'))return;try{await api('DELETE',`/emprestimos/${id}`);toast('Excluído.');carregarEmprestimos();}catch(err){toast(err.message,'error');}}
+        async function editarEmprestimo(id){
+            try{
+                const clientes=await api('GET','/clientes/');
+                let emp=null;
+                for(const c of clientes){try{const h=await api('GET',`/clientes/${c.id}/historico`);const found=h.emprestimos.find(e=>e.id===id);if(found){emp=found;emp.cliente_nome=c.nome;break;}}catch(e){}}
+                if(!emp)return;
+                document.getElementById('editEmpId').value=emp.id;
+                document.getElementById('editEmpBanco').value=emp.banco;
+                document.getElementById('editEmpValor').value=emp.valor;
+                document.getElementById('editEmpComissao').value=emp.comissao||0;
+                document.getElementById('editEmpParcelas').value=emp.parcelas;
+                new bootstrap.Modal(document.getElementById('modalEditarEmprestimo')).show();
+            }catch(err){toast(err.message,'error');}
+        }
+        async function salvarEdicaoEmprestimo(){
+            try{
+                const id=document.getElementById('editEmpId').value;
+                await api('PUT',`/emprestimos/${id}`,{
+                    banco:document.getElementById('editEmpBanco').value,
+                    valor:parseFloat(document.getElementById('editEmpValor').value),
+                    comissao:parseFloat(document.getElementById('editEmpComissao').value)||0,
+                    parcelas:parseInt(document.getElementById('editEmpParcelas').value)
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarEmprestimo')).hide();
+                toast('Empréstimo atualizado!');carregarEmprestimos();carregarDashboard();
+            }catch(err){toast(err.message,'error');}
+        }
 
         // HISTÓRICO MODAL
         async function abrirHistorico(id){

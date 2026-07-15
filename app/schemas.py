@@ -90,8 +90,11 @@ class ServicoCreate(BaseModel):
 
 
 class ServicoUpdate(BaseModel):
+    tipo_servico: str | None = Field(None, min_length=1, max_length=100)
+    valor_cobrado: float | None = Field(None, ge=0)
     pago: bool | None = None
     status: str | None = None
+    observacoes: str | None = Field(None, max_length=2000)
 
 
 class ServicoResponse(BaseModel):
@@ -116,7 +119,10 @@ class EmprestimoCreate(BaseModel):
 
 
 class EmprestimoUpdate(BaseModel):
-    comissao: float | None = None
+    valor: float | None = Field(None, gt=0)
+    comissao: float | None = Field(None, ge=0)
+    banco: str | None = Field(None, min_length=1, max_length=100)
+    parcelas: int | None = Field(None, ge=1, le=480)
     status: str | None = None
 
 

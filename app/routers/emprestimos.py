@@ -74,13 +74,19 @@ def atualizar_emprestimo(
     emprestimo = db.query(EmprestimoDB).filter(EmprestimoDB.id == emprestimo_id).first()
     if not emprestimo:
         raise HTTPException(status_code=404, detail="Empréstimo não encontrado")
+    if dados.valor is not None:
+        emprestimo.valor = dados.valor
     if dados.comissao is not None:
         emprestimo.comissao = dados.comissao
+    if dados.banco is not None:
+        emprestimo.banco = dados.banco
+    if dados.parcelas is not None:
+        emprestimo.parcelas = dados.parcelas
     if dados.status is not None:
         emprestimo.status = dados.status
     db.commit()
     db.refresh(emprestimo)
-    registrar_log(db, usuario, "atualizar", "emprestimo", emprestimo.id)
+    registrar_log(db, usuario, "atualizar", "emprestimo", emprestimo.id, f"Empréstimo {emprestimo.banco} atualizado")
     return emprestimo
 
 
