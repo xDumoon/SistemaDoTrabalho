@@ -520,15 +520,22 @@
             setTimeout(()=>{t.style.transform='translateX(120%)';t.style.opacity='0';t.style.transition='all 0.3s ease';setTimeout(()=>t.remove(),350);},3500);
         }
 
+        function extrairErro(detail) {
+            if (!detail) return 'Erro desconhecido';
+            if (typeof detail === 'string') return detail;
+            if (Array.isArray(detail)) return detail.map(d => d.msg || JSON.stringify(d)).join('; ');
+            if (typeof detail === 'object') return detail.msg || detail.detail || JSON.stringify(detail);
+            return String(detail);
+        }
         async function api(method, path, data=null) {
             const opts = {method,headers:{'Content-Type':'application/json'}};
             if (TOKEN) opts.headers['Authorization'] = `Bearer ${TOKEN}`;
             if (data) opts.body = JSON.stringify(data);
             const r = await fetch(`${API}${path}`, opts);
-            if (r.status===429) {const e=await r.json().catch(()=>({})); throw new Error(e.detail||'Muitas tentativas');}
+            if (r.status===429) {const e=await r.json().catch(()=>({})); throw new Error(extrairErro(e.detail)||'Muitas tentativas');}
             if (!r.ok) {
                 if (r.status===401 && path!=='/auth/login') {logout(); throw new Error('Sessao expirada');}
-                const e=await r.json().catch(()=>({})); throw new Error(e.detail||`Erro ${r.status}`);
+                const e=await r.json().catch(()=>({})); throw new Error(extrairErro(e.detail)||`Erro ${r.status}`);
             }
             const ct=r.headers.get('content-type')||'';
             if (ct.includes('json')) return r.json();

@@ -51,6 +51,8 @@ class ClienteCreate(BaseModel):
         for j in range(9, 11):
             soma = sum(int(cpf[i]) * (j + 1 - i) for i in range(j))
             digito = (soma * 10 % 11) % 11
+            if digito == 10:
+                digito = 0
             if int(cpf[j]) != digito:
                 raise ValueError("CPF inválido: dígitos verificadores não conferem")
         return cpf
