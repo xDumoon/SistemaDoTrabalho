@@ -29,10 +29,11 @@ executar_migracoes()
 def criar_admin_inicial():
     db = SessionLocal()
     if not db.query(UsuarioDB).filter(UsuarioDB.username == "admin").first():
+        admin_senha = os.getenv("ADMIN_PASSWORD", "admin123")
         admin = UsuarioDB(
             username="admin",
             nome="Administrador",
-            hashed_password=hash_password("Admin002016!@#"),
+            hashed_password=hash_password(admin_senha),
             role="admin",
         )
         db.add(admin)

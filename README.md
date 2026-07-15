@@ -67,9 +67,9 @@ venv\Scripts\activate  # Windows
 # 3. Instalar dependencias
 pip install -r requirements.txt
 
-# 4. Criar arquivo .env
-copy .env.example .env
-# Edite .env e defina sua SECRET_KEY
+# 4. Copiar arquivo de configuracao
+copy .env.example .env  # Windows
+# cp .env.example .env  # Linux/Mac
 
 # 5. Rodar
 python main.py
@@ -77,7 +77,24 @@ python main.py
 
 Acesse: http://127.0.0.1:8000
 
-> O usuario admin e criado automaticamente no primeiro acesso.
+### Credenciais
+
+| Usuario | Senha | Perfil |
+|---------|-------|--------|
+| admin | admin123 | Administrador |
+
+> Apos o primeiro login, crie seus proprios usuarios na pagina "Usuarios".
+
+### Configuracao
+
+Para configurar o sistema, edite o arquivo `.env`:
+
+| Variavel | Padrao | Descricao |
+|----------|--------|-----------|
+| `SECRET_KEY` | (obrigatorio) | Chave para tokens JWT |
+| `ADMIN_PASSWORD` | admin123 | Senha do usuario admin |
+| `DATABASE_URL` | SQLite local | URL do banco de dados |
+| `PORT` | 8000 | Porta do servidor |
 
 ### Com Docker
 
@@ -93,12 +110,16 @@ docker run -p 8000:8000 -e SECRET_KEY=sua_chave credmax
 3. Criar Web Service conectado ao GitHub
 4. Configurar variaveis de ambiente:
    - `SECRET_KEY` = chave segura (gerere com `python -c "import secrets; print(secrets.token_hex(32))"`)
+   - `ADMIN_PASSWORD` = senha forte para o admin
    - `DATABASE_URL` = URL do PostgreSQL
 5. Deploy automatico
 
+> **Importante**: Em producao, sempre defina `ADMIN_PASSWORD` e `SECRET_KEY` seguros.
+
 ## Seguranca
 
-- ** SECRET_KEY** obrigatoria via variavel de ambiente (sem fallback para desenvolvimento)
+- **SECRET_KEY** obrigatoria via variavel de ambiente
+- **ADMIN_PASSWORD** configuravel para cada ambiente
 - **Rate limit** contra brute force
 - **Senhas** protegidas com hash unidirecional
 - **Tokens JWT** com expiracao configuravel
