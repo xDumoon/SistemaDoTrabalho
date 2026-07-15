@@ -118,6 +118,10 @@
         .cliente-card { background: var(--bg-card); border-radius: var(--radius-sm); padding: 0.85rem 1.1rem; margin-bottom: 0.4rem; border: 1px solid var(--border); transition: all var(--transition); display: flex; justify-content: space-between; align-items: center; }
         .cliente-card:hover { border-color: var(--primary); box-shadow: 0 2px 12px rgba(13,110,253,0.08); }
         .cliente-card.pendente { border-left: 4px solid var(--danger); }
+        .cliente-linha { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+        .cliente-linha strong { font-size: 0.95rem; color: var(--text-heading); }
+        .cpf-tag { font-size: 0.82rem; color: var(--text-muted); font-family: 'Courier New', monospace; letter-spacing: 0.3px; }
+        .cliente-detalhe { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
 
         /* BADGES */
         .badge-pendente { background: var(--warning-light); color: var(--warning); }
@@ -185,8 +189,12 @@
         body.dark-mode .bg-light { background-color: var(--bg-card) !important; color: var(--text-body); }
         body.dark-mode .bg-light strong { color: var(--text-heading); }
         body.dark-mode .bg-light small { color: var(--text-muted); }
-        body.dark-mode .cliente-card strong { color: #ffffff !important; }
-        body.dark-mode .item-row strong { color: #ffffff !important; }
+        body.dark-mode .cliente-card, body.dark-mode .cliente-card * { color: var(--text-heading) !important; }
+        body.dark-mode .cliente-card small { color: var(--text-muted) !important; }
+        body.dark-mode .item-row, body.dark-mode .item-row * { color: var(--text-heading) !important; }
+        body.dark-mode .item-row small { color: var(--text-muted) !important; }
+        body.dark-mode .item-row .text-success { color: var(--success) !important; }
+        body.dark-mode .item-row .text-danger { color: var(--danger) !important; }
         body.dark-mode .table { --bs-table-bg: transparent; --bs-table-color: var(--text-body); --bs-table-border-color: var(--border); }
         body.dark-mode .table thead th { color: var(--text-muted); border-bottom-color: var(--border); }
         body.dark-mode .table-hover > tbody > tr:hover > * { background-color: rgba(255,255,255,0.03); }
@@ -614,7 +622,11 @@
             return r.text();
         }
 
-        function fmtData(d) { return d ? new Date(d).toLocaleString('pt-BR') : '-'; }
+        function fmtData(d) {
+            if (!d) return '-';
+            const dt = d.includes('T') && !d.endsWith('Z') && !d.includes('+') ? new Date(d + 'Z') : new Date(d);
+            return dt.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
+        }
         function fmtVal(v) { return (v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
         function esc(s) { const d=document.createElement('div'); d.textContent=s??''; return d.innerHTML; }
 
@@ -733,10 +745,11 @@
                 renderizarClientes(dev,false,true);
             }catch(e){}
         }
+        function formatarCPF(cpf){if(!cpf||cpf.length!==11)return cpf;return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/,'$1.$2.$3-$4');}
         function renderizarClientes(lista,isPendente=false){
             const div=document.getElementById('clientesLista');
             if(!lista.length){div.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum cliente.</p></div>';return;}
-            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
+            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><div class="cliente-linha"><strong>${esc(c.nome)}</strong> <span class="cpf-tag">${formatarCPF(c.cpf)}</span></div><div class="cliente-detalhe">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</div></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
         }
         function filtrarClientes(modo){
             filtroClientes=modo;
@@ -893,9 +906,10 @@
                 div.innerHTML=f.map(e=>{
                     const val=fmtVal(e.valor);
                     const com=e.comissao>0?`Comissão: ${fmtVal(e.comissao)}`:'';
+                    const cli=e.cliente_nome?`<small class="text-muted">${esc(e.cliente_nome)}</small>`:'';
                     return `<div class="item-row">
                         <div class="item-info">
-                            <strong>${esc(e.banco)}</strong> - ${val} (${e.parcelas}x)
+                            <strong>${esc(e.banco)}</strong> ${cli} - ${val} (${e.parcelas}x)
                             ${com?`<br><small class="text-success">${com}</small>`:''}
                             <br><span class="badge badge-${e.status==='Concluído'?'concluido':'pendente'}">${esc(e.status)}</span>
                             <small class="text-muted ms-2">${fmtData(e.data_cadastro)}</small>
