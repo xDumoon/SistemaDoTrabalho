@@ -50,3 +50,33 @@ def login(dados: LoginRequest, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UsuarioResponse)
 def usuario_logado(usuario: UsuarioDB = Depends(get_current_user)):
     return usuario
+
+
+@router.get("/usuarios", response_model=list[UsuarioResponse])
+def listar_usuarios(
+    db: Session = Depends(get_db),
+    admin: UsuarioDB = Depends(get_current_user),
+):
+    if admin.role != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    return db.query(UsuarioDB).all()
+
+
+@router.delete("/usuarios/{usuario_id}")
+def deletar_usuario(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    admin: UsuarioDB = Depends(get_current_user),
+):
+    if admin.role != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores")
+    if usuario_id == admin.id:
+        raise HTTPException(status_code=400, detail="Não é possível excluir a si mesmo")
+    usuario = db.query(UsuarioDB).filter(UsuarioDB.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    if usuario.username == "admin":
+        raise HTTPException(status_code=400, detail="Não é possível excluir o admin padrão")
+    db.delete(usuario)
+    db.commit()
+    return {"mensagem": "Usuário excluído com sucesso!"}

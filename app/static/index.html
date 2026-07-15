@@ -277,6 +277,7 @@
                 <div class="nav-item"><a class="nav-link" data-page="receita"><i class="bi bi-graph-up-arrow"></i> Minha Receita</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="relatorios"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="logs"><i class="bi bi-clock-history"></i> Auditoria</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="usuarios"><i class="bi bi-person-gear"></i> Usuários</a></div>
             </div>
             <div class="sidebar-footer"><small>Conectado como <span id="footerUsername">---</span></small><button class="dark-toggle" id="darkToggle" onclick="toggleDarkMode()" title="Modo escuro"><i class="bi bi-moon-stars"></i></button></div>
         </nav>
@@ -454,6 +455,33 @@
                     </div>
                 </div>
             </div>
+
+            <!-- USUÁRIOS -->
+            <div id="page-usuarios" class="section-page">
+                <div class="form-section">
+                    <h5><i class="bi bi-person-plus me-1"></i>Criar Usuário</h5>
+                    <form id="formUsuario" class="row g-2">
+                        <div class="col-md-3"><input class="form-control" id="usrNome" placeholder="Nome completo" required></div>
+                        <div class="col-md-2"><input class="form-control" id="usrUsername" placeholder="Login (username)" required minlength="3"></div>
+                        <div class="col-md-2"><input type="password" class="form-control" id="usrSenha" placeholder="Senha" required minlength="4"></div>
+                        <div class="col-md-2">
+                            <select class="form-select" id="usrRole" required>
+                                <option value="user">Usuário</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Criar Usuário</button></div>
+                    </form>
+                </div>
+                <div class="card-custom card">
+                    <div class="card-header"><i class="bi bi-people me-2"></i>Usuários Cadastrados</div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm"><thead><tr><th>Nome</th><th>Login</th><th>Perfil</th><th>Status</th><th>Cadastro</th><th>Ações</th></tr></thead><tbody id="usuariosBody"></tbody></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -556,7 +584,7 @@
                 document.querySelectorAll('.section-page').forEach(p=>p.classList.remove('active'));
                 const el=document.getElementById(`page-${page}`);
                 if(el)el.classList.add('active');
-                const titles={dashboard:'Dashboard',clientes:'Clientes',servicos:'Serviços INSS',emprestimos:'Empréstimos',receita:'Minha Receita',relatorios:'Relatórios',logs:'Auditoria'};
+                const titles={dashboard:'Dashboard',clientes:'Clientes',servicos:'Serviços INSS',emprestimos:'Empréstimos',receita:'Minha Receita',relatorios:'Relatórios',logs:'Auditoria',usuarios:'Usuários'};
                 document.getElementById('pageTitle').textContent=titles[page]||page;
                 document.getElementById('sidebar').classList.remove('show');
                 if(page==='dashboard') carregarDashboard();
@@ -566,6 +594,7 @@
                 if(page==='receita') carregarReceita('total');
                 if(page==='relatorios') carregarRelatorios();
                 if(page==='logs') carregarLogs();
+                if(page==='usuarios') carregarUsuarios();
             });
         });
         document.getElementById('sidebarToggle').addEventListener('click',()=>{document.getElementById('sidebar').classList.toggle('show');});
@@ -994,6 +1023,39 @@
                 const logs=await api('GET','/logs');
                 document.getElementById('logsBody').innerHTML=logs.map(l=>`<tr><td class="text-nowrap">${new Date(l.data_hora).toLocaleString('pt-BR')}</td><td>${esc(l.usuario_nome||'-')}</td><td><span class="badge bg-secondary">${esc(l.acao)}</span></td><td>${esc(l.entidade)}${l.entidade_id?' #'+l.entidade_id:''}</td><td>${esc(l.detalhes||'-')}</td></tr>`).join('');
             }catch(err){}
+        }
+
+        // USUÁRIOS
+        async function carregarUsuarios(){
+            try{
+                const usuarios=await api('GET','/auth/usuarios');
+                document.getElementById('usuariosBody').innerHTML=usuarios.map(u=>`<tr>
+                    <td><strong>${esc(u.nome)}</strong></td>
+                    <td>${esc(u.username)}</td>
+                    <td><span class="badge ${u.role==='admin'?'bg-primary':'bg-secondary'}">${u.role==='admin'?'Admin':'Usuário'}</span></td>
+                    <td><span class="badge ${u.ativo?'badge-concluido':'badge-nao-pago'}">${u.ativo?'Ativo':'Inativo'}</span></td>
+                    <td>${fmtData(u.data_cadastro)}</td>
+                    <td>${u.username!=='admin'?`<button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirUsuario(${u.id})" title="Excluir"><i class="bi bi-trash"></i></button>`:''}</td>
+                </tr>`).join('');
+            }catch(err){toast('Erro ao carregar usuários','error');}
+        }
+        document.getElementById('formUsuario').addEventListener('submit',async(e)=>{
+            e.preventDefault();
+            try{
+                await api('POST','/auth/cadastro',{
+                    nome:document.getElementById('usrNome').value,
+                    username:document.getElementById('usrUsername').value,
+                    password:document.getElementById('usrSenha').value,
+                    role:document.getElementById('usrRole').value
+                });
+                document.getElementById('formUsuario').reset();
+                toast('Usuário criado com sucesso!');
+                carregarUsuarios();
+            }catch(err){toast(err.message,'error');}
+        });
+        async function excluirUsuario(id){
+            if(!confirm('Excluir este usuário?'))return;
+            try{await api('DELETE',`/auth/usuarios/${id}`);toast('Usuário excluído.');carregarUsuarios();}catch(err){toast(err.message,'error');}
         }
 
         function atualizarSelects(){
