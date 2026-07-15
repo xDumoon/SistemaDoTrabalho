@@ -6,7 +6,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from app.database import engine, Base
 from app.models import UsuarioDB
-from app.auth import hash_password
+from app.auth import hash_password, verificar_password
 from app.database import SessionLocal
 from app.migrate import executar_migracoes
 from app.routers import auth_router, clientes, servicos, emprestimos, dashboard
@@ -28,8 +28,9 @@ executar_migracoes()
 
 def criar_admin_inicial():
     db = SessionLocal()
-    if not db.query(UsuarioDB).filter(UsuarioDB.username == "admin").first():
-        admin_senha = os.getenv("ADMIN_PASSWORD", "admin123")
+    admin = db.query(UsuarioDB).filter(UsuarioDB.username == "admin").first()
+    admin_senha = os.getenv("ADMIN_PASSWORD", "admin123")
+    if not admin:
         admin = UsuarioDB(
             username="admin",
             nome="Administrador",
@@ -37,6 +38,9 @@ def criar_admin_inicial():
             role="admin",
         )
         db.add(admin)
+        db.commit()
+    elif verificar_password("admin123", admin.hashed_password):
+        admin.hashed_password = hash_password(admin_senha)
         db.commit()
     db.close()
 

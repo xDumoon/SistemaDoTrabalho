@@ -75,8 +75,6 @@ def deletar_usuario(
     usuario = db.query(UsuarioDB).filter(UsuarioDB.id == usuario_id).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    if usuario.username == "admin":
-        raise HTTPException(status_code=400, detail="Não é possível excluir o admin padrão")
     db.delete(usuario)
     db.commit()
     return {"mensagem": "Usuário excluído com sucesso!"}
