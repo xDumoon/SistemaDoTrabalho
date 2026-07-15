@@ -120,7 +120,7 @@
         .cliente-card.pendente { border-left: 4px solid var(--danger); }
         .cliente-linha { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
         .cliente-linha strong { font-size: 0.95rem; color: var(--text-heading); }
-        .cpf-tag { font-size: 0.82rem; color: var(--text-muted); font-family: 'Courier New', monospace; letter-spacing: 0.3px; }
+        .cpf-tag { font-size: 0.82rem; color: var(--text-muted); }
         .cliente-detalhe { font-size: 0.82rem; color: var(--text-muted); margin-top: 2px; }
 
         /* BADGES */
@@ -195,6 +195,8 @@
         body.dark-mode .item-row small { color: var(--text-muted) !important; }
         body.dark-mode .item-row .text-success { color: var(--success) !important; }
         body.dark-mode .item-row .text-danger { color: var(--danger) !important; }
+        body.dark-mode .pendencia-item, body.dark-mode .pendencia-item * { color: var(--text-heading) !important; }
+        body.dark-mode .pendencia-item .cpf-tag { color: var(--text-muted) !important; }
         body.dark-mode .table { --bs-table-bg: transparent; --bs-table-color: var(--text-body); --bs-table-border-color: var(--border); }
         body.dark-mode .table thead th { color: var(--text-muted); border-bottom-color: var(--border); }
         body.dark-mode .table-hover > tbody > tr:hover > * { background-color: rgba(255,255,255,0.03); }
@@ -713,7 +715,7 @@
                 const pend=await api('GET','/clientes/pendentes');
                 const pDiv=document.getElementById('dashPendenciasLista');
                 if(!pend.length) pDiv.innerHTML='<p class="text-muted mb-0">Nenhuma pendência!</p>';
-                else pDiv.innerHTML=pend.map(c=>`<div class="d-flex justify-content-between align-items-center py-1 border-bottom"><span><strong>${esc(c.nome)}</strong><br><small class="text-muted">${esc(c.cpf)}</small></span><button class="btn btn-sm btn-outline-primary" onclick="abrirHistorico(${c.id})">Ver</button></div>`).join('');
+                else pDiv.innerHTML=pend.map(c=>`<div class="d-flex justify-content-between align-items-center py-1 border-bottom pendencia-item"><span><strong>${esc(c.nome)}</strong> <span class="cpf-tag">${formatarCPF(c.cpf)}</span></span><button class="btn btn-sm btn-outline-primary" onclick="abrirHistorico(${c.id})">Ver</button></div>`).join('');
 
                 const receita=await api('GET','/receita-servicos?periodo=total');
                 if(chartServicos)chartServicos.destroy();
@@ -749,7 +751,7 @@
         function renderizarClientes(lista,isPendente=false){
             const div=document.getElementById('clientesLista');
             if(!lista.length){div.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum cliente.</p></div>';return;}
-            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><div class="cliente-linha"><strong>${esc(c.nome)}</strong> <span class="cpf-tag">${formatarCPF(c.cpf)}</span></div><div class="cliente-detalhe">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</div></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
+            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
         }
         function filtrarClientes(modo){
             filtroClientes=modo;
