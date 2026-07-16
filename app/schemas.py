@@ -34,7 +34,7 @@ class TokenResponse(BaseModel):
 class ClienteCreate(BaseModel):
     nome: str = Field(..., min_length=1, max_length=200)
     cpf: str = Field(..., min_length=11, max_length=14)
-    telefone: str = Field(..., min_length=8, max_length=20)
+    telefone: str | None = Field(None, max_length=20)
     email: str | None = Field(None, max_length=200)
     data_nascimento: str | None = Field(None, max_length=10)
     endereco: str | None = Field(None, max_length=500)
