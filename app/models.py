@@ -20,6 +20,7 @@ class ClienteDB(Base):
     __tablename__ = "clientes"
 
     id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     nome = Column(String, index=True)
     cpf = Column(String, unique=True, index=True)
     telefone = Column(String)
@@ -31,6 +32,7 @@ class ClienteDB(Base):
 
     servicos = relationship("ServicoDB", back_populates="cliente", cascade="all, delete-orphan")
     emprestimos = relationship("EmprestimoDB", back_populates="cliente", cascade="all, delete-orphan")
+    usuario = relationship("UsuarioDB", backref="clientes")
 
 
 class ServicoDB(Base):
@@ -38,6 +40,7 @@ class ServicoDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     tipo_servico = Column(String)
     status = Column(String, default="Pendente")
     valor_cobrado = Column(Float, default=0.0)
@@ -46,6 +49,7 @@ class ServicoDB(Base):
     data_cadastro = Column(DateTime, default=datetime.utcnow)
 
     cliente = relationship("ClienteDB", back_populates="servicos")
+    usuario = relationship("UsuarioDB")
 
 
 class EmprestimoDB(Base):
@@ -53,6 +57,7 @@ class EmprestimoDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     cliente_id = Column(Integer, ForeignKey("clientes.id"))
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
     valor = Column(Float)
     comissao = Column(Float, default=0.0)
     banco = Column(String)
@@ -62,6 +67,7 @@ class EmprestimoDB(Base):
     data_conclusao = Column(DateTime, nullable=True)
 
     cliente = relationship("ClienteDB", back_populates="emprestimos")
+    usuario = relationship("UsuarioDB")
 
 
 class LogDB(Base):

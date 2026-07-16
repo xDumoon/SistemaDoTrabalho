@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import ServicoDB, LogDB, UsuarioDB
+from app.models import ServicoDB, LogDB, UsuarioDB, ClienteDB
 from app.schemas import ServicoCreate, ServicoUpdate, ServicoResponse
 from app.auth import get_current_user
 
@@ -27,7 +27,7 @@ def cadastrar_servico(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
-    novo = ServicoDB(**servico.model_dump())
+    novo = ServicoDB(**servico.model_dump(), usuario_id=usuario.id)
     db.add(novo)
     db.commit()
     db.refresh(novo)
@@ -52,7 +52,10 @@ def listar_todos_servicos(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
-    return db.query(ServicoDB).order_by(ServicoDB.id.desc()).limit(200).all()
+    query = db.query(ServicoDB)
+    if usuario.role != "admin":
+        query = query.filter(ServicoDB.usuario_id == usuario.id)
+    return query.order_by(ServicoDB.id.desc()).limit(200).all()
 
 
 @router.put("/{servico_id}/concluir", response_model=ServicoResponse)

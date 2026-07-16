@@ -54,4 +54,28 @@ def executar_migracoes():
                     except OperationalError:
                         pass
 
+        if inspector.has_table("clientes"):
+            colunas_clientes = [c["name"] for c in inspector.get_columns("clientes")]
+            if "usuario_id" not in colunas_clientes:
+                try:
+                    conn.execute(text("ALTER TABLE clientes ADD COLUMN usuario_id INTEGER REFERENCES usuarios(id)"))
+                except OperationalError:
+                    pass
+
+        if inspector.has_table("servicos_inss"):
+            colunas_servicos = [c["name"] for c in inspector.get_columns("servicos_inss")]
+            if "usuario_id" not in colunas_servicos:
+                try:
+                    conn.execute(text("ALTER TABLE servicos_inss ADD COLUMN usuario_id INTEGER REFERENCES usuarios(id)"))
+                except OperationalError:
+                    pass
+
+        if inspector.has_table("emprestimos"):
+            colunas_emprestimos = [c["name"] for c in inspector.get_columns("emprestimos")]
+            if "usuario_id" not in colunas_emprestimos:
+                try:
+                    conn.execute(text("ALTER TABLE emprestimos ADD COLUMN usuario_id INTEGER REFERENCES usuarios(id)"))
+                except OperationalError:
+                    pass
+
         conn.commit()

@@ -582,6 +582,23 @@
         </div>
     </div>
 
+    <!-- MODAL ALTERAR SENHA -->
+    <div class="modal fade modal-custom" id="modalAlterarSenha" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Alterar Senha</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <p id="senhaUsuarioNome" class="mb-3"></p>
+                    <div class="mb-3"><label class="form-label">Nova Senha</label><input type="password" class="form-control" id="novaSenhaInput" required minlength="4"></div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="salvarNovaSenha()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <script>
@@ -662,6 +679,8 @@
             const isAdmin=USER&&USER.role==='admin';
             const navUsr=document.querySelector('[data-page="usuarios"]');
             if(navUsr) navUsr.closest('.nav-item').style.display=isAdmin?'':'none';
+            const navLogs=document.querySelector('[data-page="logs"]');
+            if(navLogs) navLogs.closest('.nav-item').style.display=isAdmin?'':'none';
         }
         (function init(){
             const s=localStorage.getItem('credmax_token'),u=localStorage.getItem('credmax_user');
@@ -968,13 +987,14 @@
             try{
                 const h=await api('GET',`/clientes/${id}/historico`);
                 document.getElementById('modalTitle').textContent=`Histórico: ${esc(h.cliente_nome)}`;
-                document.getElementById('modalInfo').innerHTML=`<strong>CPF:</strong> ${esc(h.cpf)} | <strong>Tel:</strong> ${esc(h.telefone)}${h.email?' | <strong>Email:</strong> '+esc(h.email):''}`;
+                document.getElementById('modalInfo').innerHTML=`<strong>CPF:</strong> ${esc(h.cpf)} | <strong>Tel:</strong> ${esc(h.telefone)}${h.email?' | <strong>Email:</strong> '+esc(h.email):''}${h.data_nascimento?' | <strong>Nasc:</strong> '+esc(h.data_nascimento):''}${h.endereco?'<br><strong>Endereço:</strong> '+esc(h.endereco):''}${h.observacoes?'<br><strong>Obs:</strong> '+esc(h.observacoes):''}`;
                 const sDiv=document.getElementById('modalServicos');
                 if(!h.servicos.length) sDiv.innerHTML='<p class="text-muted">Nenhum serviço.</p>';
                 else sDiv.innerHTML=h.servicos.map(s=>{
                     const val=s.valor_cobrado>0?`<strong>${fmtVal(s.valor_cobrado)}</strong>`:'';
+                    const obs=s.observacoes?`<br><small class="text-muted"><i class="bi bi-chat-dots me-1"></i>${esc(s.observacoes)}</small>`:'';
                     return `<div class="item-row">
-                        <div class="item-info">${esc(s.tipo_servico)} ${val} <span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'}">${esc(s.status)}</span> <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':s.valor_cobrado>0?'DEVENDO':'-'}</span><br><small class="text-muted">${fmtData(s.data_cadastro)}</small></div>
+                        <div class="item-info">${esc(s.tipo_servico)} ${val} <span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'}">${esc(s.status)}</span> <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':s.valor_cobrado>0?'DEVENDO':'-'}</span><br><small class="text-muted">${fmtData(s.data_cadastro)}</small>${obs}</div>
                         <div class="item-acoes">
                             ${s.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirServicoModal(${s.id},${id})"><i class="bi bi-check-lg"></i></button>`:''}
                             ${!s.pago&&s.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="marcarPagoModal(${s.id},${id})"><i class="bi bi-cash"></i></button>`:''}
@@ -1213,7 +1233,7 @@
                     <td><span class="badge ${u.role==='admin'?'bg-primary':'bg-secondary'}">${u.role==='admin'?'Admin':'Usuário'}</span></td>
                     <td><span class="badge ${u.ativo?'badge-concluido':'badge-nao-pago'}">${u.ativo?'Ativo':'Inativo'}</span></td>
                     <td>${fmtData(u.data_cadastro)}</td>
-                    <td>${u.username!=='admin'?`<button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirUsuario(${u.id})" title="Excluir"><i class="bi bi-trash"></i></button>`:''}</td>
+                    <td>${u.username!=='admin'?`<button class="btn btn-sm btn-outline-warning btn-action" onclick="abrirAlterarSenha(${u.id},'${esc(u.nome)}')" title="Alterar Senha"><i class="bi bi-key"></i></button> <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirUsuario(${u.id})" title="Excluir"><i class="bi bi-trash"></i></button>`:''}</td>
                 </tr>`).join('');
             }catch(err){toast('Erro ao carregar usuários','error');}
         }
@@ -1234,6 +1254,21 @@
         async function excluirUsuario(id){
             if(!confirm('Excluir este usuário?'))return;
             try{await api('DELETE',`/auth/usuarios/${id}`);toast('Usuário excluído.');carregarUsuarios();}catch(err){toast(err.message,'error');}
+        }
+        let senhaUsuarioId=null;
+        function abrirAlterarSenha(id,nome){
+            senhaUsuarioId=id;
+            document.getElementById('senhaUsuarioNome').textContent=`Alterar senha de: ${nome}`;
+            document.getElementById('novaSenhaInput').value='';
+            new bootstrap.Modal(document.getElementById('modalAlterarSenha')).show();
+        }
+        async function salvarNovaSenha(){
+            if(!senhaUsuarioId)return;
+            try{
+                await api('PUT',`/auth/usuarios/${senhaUsuarioId}/senha`,{nova_senha:document.getElementById('novaSenhaInput').value});
+                bootstrap.Modal.getInstance(document.getElementById('modalAlterarSenha')).hide();
+                toast('Senha alterada com sucesso!');
+            }catch(err){toast(err.message,'error');}
         }
 
         function atualizarSelects(){

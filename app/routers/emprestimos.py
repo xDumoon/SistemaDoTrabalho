@@ -2,7 +2,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import EmprestimoDB, LogDB, UsuarioDB
+from app.models import EmprestimoDB, LogDB, UsuarioDB, ClienteDB
 from app.schemas import EmprestimoCreate, EmprestimoUpdate, EmprestimoResponse
 from app.auth import get_current_user
 
@@ -28,7 +28,7 @@ def cadastrar_emprestimo(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
-    novo = EmprestimoDB(**emprestimo.model_dump())
+    novo = EmprestimoDB(**emprestimo.model_dump(), usuario_id=usuario.id)
     db.add(novo)
     db.commit()
     db.refresh(novo)
@@ -44,7 +44,10 @@ def listar_emprestimos(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
-    return db.query(EmprestimoDB).order_by(EmprestimoDB.id.desc()).limit(200).all()
+    query = db.query(EmprestimoDB)
+    if usuario.role != "admin":
+        query = query.filter(EmprestimoDB.usuario_id == usuario.id)
+    return query.order_by(EmprestimoDB.id.desc()).limit(200).all()
 
 
 @router.put("/{emprestimo_id}/concluir", response_model=EmprestimoResponse)

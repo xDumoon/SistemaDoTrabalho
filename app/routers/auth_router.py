@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
+from pydantic import BaseModel, Field
 from app.database import get_db
 from app.models import UsuarioDB
 from app.schemas import LoginRequest, TokenResponse, UsuarioCreate, UsuarioResponse
@@ -78,3 +79,24 @@ def deletar_usuario(
     db.delete(usuario)
     db.commit()
     return {"mensagem": "Usuário excluído com sucesso!"}
+
+
+class AlterarSenhaRequest(BaseModel):
+    nova_senha: str = Field(..., min_length=4, max_length=100)
+
+
+@router.put("/usuarios/{usuario_id}/senha")
+def alterar_senha_usuario(
+    usuario_id: int,
+    dados: AlterarSenhaRequest,
+    db: Session = Depends(get_db),
+    admin: UsuarioDB = Depends(get_current_user),
+):
+    if admin.role != "admin":
+        raise HTTPException(status_code=403, detail="Apenas administradores podem alterar senhas")
+    usuario = db.query(UsuarioDB).filter(UsuarioDB.id == usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    usuario.hashed_password = hash_password(dados.nova_senha)
+    db.commit()
+    return {"mensagem": f"Senha de {usuario.nome} alterada com sucesso!"}

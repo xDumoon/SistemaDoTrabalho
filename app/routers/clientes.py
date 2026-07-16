@@ -29,7 +29,9 @@ def cadastrar_cliente(
 ):
     if db.query(ClienteDB).filter(ClienteDB.cpf == cliente.cpf).first():
         raise HTTPException(status_code=400, detail="CPF já cadastrado")
-    novo = ClienteDB(**cliente.model_dump(mode="json"))
+    dados = cliente.model_dump(mode="json")
+    dados["usuario_id"] = usuario.id
+    novo = ClienteDB(**dados)
     db.add(novo)
     db.commit()
     db.refresh(novo)
@@ -152,6 +154,9 @@ def ver_historico_cliente(
         "cpf": cliente.cpf,
         "telefone": cliente.telefone,
         "email": cliente.email,
+        "endereco": cliente.endereco,
+        "data_nascimento": cliente.data_nascimento,
+        "observacoes": cliente.observacoes,
         "servicos": servicos,
         "emprestimos": emprestimos,
     }

@@ -25,45 +25,52 @@ def obter_dashboard(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
+    eh_admin = usuario.role == "admin"
+
     total_clientes = db.query(ClienteDB).count()
-    servicos_pend = db.query(ServicoDB).filter(ServicoDB.status == "Pendente").count()
-    emprestimos_pend = db.query(EmprestimoDB).filter(EmprestimoDB.status == "Pendente").count()
-    emprestimos_conc = db.query(EmprestimoDB).filter(EmprestimoDB.status == "Concluído").count()
-    total_emprestimos = db.query(func.sum(EmprestimoDB.valor)).scalar() or 0.0
+
+    if eh_admin:
+        emp_query = db.query(EmprestimoDB)
+        serv_query = db.query(ServicoDB)
+    else:
+        emp_query = db.query(EmprestimoDB).filter(EmprestimoDB.usuario_id == usuario.id)
+        serv_query = db.query(ServicoDB).filter(ServicoDB.usuario_id == usuario.id)
+
+    servicos_pend = serv_query.filter(ServicoDB.status == "Pendente").count()
+    emprestimos_pend = emp_query.filter(EmprestimoDB.status == "Pendente").count()
+    emprestimos_conc = emp_query.filter(EmprestimoDB.status == "Concluído").count()
+    total_emprestimos = emp_query.with_entities(func.sum(EmprestimoDB.valor)).scalar() or 0.0
 
     trinta_dias_atras = datetime.utcnow() - timedelta(days=30)
 
-    # Total de empréstimos no mês
-    total_emp_mes = db.query(func.sum(EmprestimoDB.valor)).filter(
+    total_emp_mes = emp_query.filter(
         EmprestimoDB.data_cadastro >= trinta_dias_atras
-    ).scalar() or 0.0
+    ).with_entities(func.sum(EmprestimoDB.valor)).scalar() or 0.0
 
-    # Comissões
-    comissao_total = db.query(func.sum(EmprestimoDB.comissao)).scalar() or 0.0
-    comissao_mes = db.query(func.sum(EmprestimoDB.comissao)).filter(
+    comissao_total = emp_query.with_entities(func.sum(EmprestimoDB.comissao)).scalar() or 0.0
+    comissao_mes = emp_query.filter(
         EmprestimoDB.data_cadastro >= trinta_dias_atras
-    ).scalar() or 0.0
+    ).with_entities(func.sum(EmprestimoDB.comissao)).scalar() or 0.0
 
-    # Receita de serviços
-    receita_mes = db.query(func.sum(ServicoDB.valor_cobrado)).filter(
+    receita_mes = serv_query.filter(
         ServicoDB.pago == True,
         ServicoDB.data_cadastro >= trinta_dias_atras
-    ).scalar() or 0.0
+    ).with_entities(func.sum(ServicoDB.valor_cobrado)).scalar() or 0.0
 
-    receita_total = db.query(func.sum(ServicoDB.valor_cobrado)).filter(
+    receita_total = serv_query.filter(
         ServicoDB.pago == True
-    ).scalar() or 0.0
+    ).with_entities(func.sum(ServicoDB.valor_cobrado)).scalar() or 0.0
 
-    servicos_pagos_mes = db.query(func.sum(ServicoDB.valor_cobrado)).filter(
+    servicos_pagos_mes = serv_query.filter(
         ServicoDB.pago == True,
         ServicoDB.status == "Concluído",
         ServicoDB.data_cadastro >= trinta_dias_atras
-    ).scalar() or 0.0
+    ).with_entities(func.sum(ServicoDB.valor_cobrado)).scalar() or 0.0
 
-    a_receber = db.query(func.sum(ServicoDB.valor_cobrado)).filter(
+    a_receber = serv_query.filter(
         ServicoDB.pago == False,
         ServicoDB.valor_cobrado > 0
-    ).scalar() or 0.0
+    ).with_entities(func.sum(ServicoDB.valor_cobrado)).scalar() or 0.0
 
     return DashboardResponse(
         total_clientes=total_clientes,
@@ -96,6 +103,9 @@ def relatorio_receita_servicos(
         func.sum(ServicoDB.valor_cobrado).filter(ServicoDB.pago == False).label("a_receber"),
     )
 
+    if usuario.role != "admin":
+        query = query.filter(ServicoDB.usuario_id == usuario.id)
+
     if periodo == "mes":
         trinta_dias = datetime.utcnow() - timedelta(days=30)
         query = query.filter(ServicoDB.data_cadastro >= trinta_dias)
@@ -120,6 +130,8 @@ def listar_logs(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
+    if usuario.role != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito a administradores")
     return db.query(LogDB).order_by(LogDB.id.desc()).limit(limite).all()
 
 
@@ -156,17 +168,20 @@ def exportar_relatorio_csv(
         "Qtd Empréstimos", "Empréstimos Pendentes", "Total Empréstimos (R$)"
     ])
     for c in clientes:
-        qtd_serv = len(c.servicos)
-        serv_pend = sum(1 for s in c.servicos if s.status == "Pendente")
-        val_serv = sum(s.valor_cobrado for s in c.servicos if s.valor_cobrado)
-        val_receb = sum(s.valor_cobrado for s in c.servicos if s.pago and s.valor_cobrado)
+        meus_servicos = [s for s in c.servicos if usuario.role == "admin" or s.usuario_id == usuario.id]
+        meus_emprestimos = [e for e in c.emprestimos if usuario.role == "admin" or e.usuario_id == usuario.id]
+        qtd_serv = len(meus_servicos)
+        serv_pend = sum(1 for s in meus_servicos if s.status == "Pendente")
+        val_serv = sum(s.valor_cobrado for s in meus_servicos if s.valor_cobrado)
+        val_receb = sum(s.valor_cobrado for s in meus_servicos if s.pago and s.valor_cobrado)
         val_pend = val_serv - val_receb
-        qtd_emp = len(c.emprestimos)
-        emp_pend = sum(1 for e in c.emprestimos if e.status == "Pendente")
-        total_emp = sum(e.valor for e in c.emprestimos if e.valor)
-        writer.writerow([_sanitizar_csv(c.nome), _sanitizar_csv(c.cpf), qtd_serv, serv_pend,
-                         f"{val_serv:.2f}", f"{val_receb:.2f}", f"{val_pend:.2f}",
-                         qtd_emp, emp_pend, f"{total_emp:.2f}"])
+        qtd_emp = len(meus_emprestimos)
+        emp_pend = sum(1 for e in meus_emprestimos if e.status == "Pendente")
+        total_emp = sum(e.valor for e in meus_emprestimos if e.valor)
+        if qtd_serv > 0 or qtd_emp > 0:
+            writer.writerow([_sanitizar_csv(c.nome), _sanitizar_csv(c.cpf), qtd_serv, serv_pend,
+                             f"{val_serv:.2f}", f"{val_receb:.2f}", f"{val_pend:.2f}",
+                             qtd_emp, emp_pend, f"{total_emp:.2f}"])
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
@@ -180,7 +195,10 @@ def exportar_receita_csv(
     db: Session = Depends(get_db),
     usuario: UsuarioDB = Depends(get_current_user),
 ):
-    servicos = db.query(ServicoDB).filter(ServicoDB.valor_cobrado > 0).order_by(ServicoDB.data_cadastro.desc()).all()
+    query = db.query(ServicoDB).filter(ServicoDB.valor_cobrado > 0)
+    if usuario.role != "admin":
+        query = query.filter(ServicoDB.usuario_id == usuario.id)
+    servicos = query.order_by(ServicoDB.data_cadastro.desc()).all()
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["ID", "Cliente", "Tipo", "Valor", "Pago", "Status", "Data"])
