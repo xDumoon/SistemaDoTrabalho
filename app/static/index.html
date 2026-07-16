@@ -747,7 +747,7 @@
                     data:{labels:labels.length?labels:['Sem dados'],datasets:[{label:'Recebido',data:recebido.length?recebido:[0],backgroundColor:'#198754'},{label:'A Receber',data:aReceber.length?aReceber:[0],backgroundColor:'#dc3545'}]},
                     options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true}}}
                 });
-            } catch(err){toast('Erro no dashboard','error');}
+            } catch(err){if(TOKEN)toast('Erro no dashboard','error');}
         }
 
         // CLIENTES
@@ -1045,7 +1045,7 @@
                 const cv=servicos.filter(s=>s.valor_cobrado>0).slice(0,30);
                 const uDiv=document.getElementById('receitaUltimos');
                 uDiv.innerHTML=cv.length?cv.map(s=>`<div class="item-row"><div class="item-info"><strong>${esc(s.tipo_servico)}</strong> ${fmtVal(s.valor_cobrado)} <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':'DEVENDO'}</span><br><small class="text-muted">${fmtData(s.data_cadastro)}</small></div></div>`).join(''):'<p class="text-muted mb-0">Nenhum serviço com valor.</p>';
-            }catch(err){toast('Erro ao carregar receita','error');}
+            }catch(err){if(TOKEN)toast('Erro ao carregar receita','error');}
         }
 
         // RELATÓRIOS
