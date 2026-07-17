@@ -933,16 +933,16 @@
                 if(!f.length){div.innerHTML='<p class="text-muted mb-0">Nenhum serviço.</p>';return;}
                 div.innerHTML=f.map(s=>{
                     const c=clientes.find(c=>c.id===s.cliente_id);
-                    const val=s.valor_cobrado>0?fmtVal(s.valor_cobrado):'';
-                    return `<div class="item-row">
-                        <div class="item-info">
-                            <strong>${esc(s.tipo_servico)}</strong> <small class="text-muted">${c?esc(c.nome):'-'}</small>
-                            ${val?`<span class="fw-bold ${s.pago?'text-success':'text-danger'}">${val}</span>`:''}
-                            <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'} ms-1">${s.pago?'PAGO':'DEVENDO'}</span>
-                            <span class="badge badge-${s.status==='Concluído'?'concluido':'pendente'} ms-1">${esc(s.status)}</span>
-                            <br><small class="text-muted">${fmtData(s.data_cadastro)}</small>
+                    const val=s.valor_cobrado>0?`<strong>${fmtVal(s.valor_cobrado)}</strong> <span class="badge ${s.pago?'badge-pago':'badge-nao-pago'}">${s.pago?'PAGO':'DEVENDO'}</span>`:'';
+                    const statusBadge=s.status==='Concluído'?'badge-concluido':'badge-nao-pago';
+                    const obs=s.observacoes?`<i class="bi bi-chat-dots me-1"></i>${esc(s.observacoes)}`:'';
+                    return `<div class="cliente-card">
+                        <div class="cliente-info">
+                            <strong>${esc(c?c.nome:'-')}</strong> <small class="text-muted">${esc(s.tipo_servico)}</small> ${val} <span class="badge ${statusBadge}">${esc(s.status)}</span><br>
+                            <small class="text-muted">${obs}</small><br>
+                            <small class="text-muted">${fmtData(s.data_cadastro)}</small>
                         </div>
-                        <div class="item-acoes">
+                        <div class="cliente-acoes">
                             ${s.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirServico(${s.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
                             ${!s.pago&&s.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="marcarPago(${s.id})" title="Pago"><i class="bi bi-cash"></i></button>`:''}
                             <button class="btn btn-sm btn-outline-warning btn-action" onclick="editarServico(${s.id})" title="Editar"><i class="bi bi-pencil"></i></button>
