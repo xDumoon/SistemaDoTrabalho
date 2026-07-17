@@ -188,11 +188,13 @@ def exportar_relatorio_csv(
     writer.writerow([
         "Cliente", "CPF", "Qtd Serviços", "Serviços Pendentes",
         "Valor Serviços (R$)", "Valor Recebido (R$)", "Valor a Receber (R$)",
-        "Qtd Empréstimos", "Empréstimos Pendentes", "Total Empréstimos (R$)"
+        "Qtd Empréstimos", "Empréstimos Pendentes", "Total Empréstimos (R$)",
+        "Qtd Aposentadoria", "Apos Pendentes", "Total Aposentadoria (R$)"
     ])
     for c in clientes:
         meus_servicos = [s for s in c.servicos if usuario.role == "admin" or s.usuario_id == usuario.id]
         meus_emprestimos = [e for e in c.emprestimos if usuario.role == "admin" or e.usuario_id == usuario.id]
+        meus_pos = [p for p in db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.cliente_id == c.id).all() if usuario.role == "admin" or p.usuario_id == usuario.id]
         qtd_serv = len(meus_servicos)
         serv_pend = sum(1 for s in meus_servicos if s.status == "Pendente")
         val_serv = sum(s.valor_cobrado for s in meus_servicos if s.valor_cobrado)
@@ -201,10 +203,14 @@ def exportar_relatorio_csv(
         qtd_emp = len(meus_emprestimos)
         emp_pend = sum(1 for e in meus_emprestimos if e.status == "Pendente")
         total_emp = sum(e.valor for e in meus_emprestimos if e.valor)
-        if qtd_serv > 0 or qtd_emp > 0:
+        qtd_pos = len(meus_pos)
+        pos_pend = sum(1 for p in meus_pos if p.status == "Pendente")
+        total_pos = sum(p.valor_cobrado for p in meus_pos if p.valor_cobrado)
+        if qtd_serv > 0 or qtd_emp > 0 or qtd_pos > 0:
             writer.writerow([_sanitizar_csv(c.nome), _sanitizar_csv(c.cpf), qtd_serv, serv_pend,
                              f"{val_serv:.2f}", f"{val_receb:.2f}", f"{val_pend:.2f}",
-                             qtd_emp, emp_pend, f"{total_emp:.2f}"])
+                             qtd_emp, emp_pend, f"{total_emp:.2f}",
+                             qtd_pos, pos_pend, f"{total_pos:.2f}"])
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
@@ -222,6 +228,12 @@ def exportar_receita_csv(
     if usuario.role != "admin":
         query = query.filter(ServicoDB.usuario_id == usuario.id)
     servicos = query.order_by(ServicoDB.data_cadastro.desc()).all()
+
+    pos_query = db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.valor_cobrado > 0)
+    if usuario.role != "admin":
+        pos_query = pos_query.filter(PedidoAposentadoriaDB.usuario_id == usuario.id)
+    peds = pos_query.order_by(PedidoAposentadoriaDB.data_cadastro.desc()).all()
+
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["ID", "Cliente", "Tipo", "Valor", "Pago", "Status", "Data"])
@@ -230,6 +242,11 @@ def exportar_receita_csv(
         writer.writerow([s.id, nome_cliente, s.tipo_servico,
                          f"{s.valor_cobrado:.2f}", "Sim" if s.pago else "Não",
                          s.status, s.data_cadastro.strftime("%d/%m/%Y") if s.data_cadastro else ""])
+    for p in peds:
+        nome_cliente = _sanitizar_csv(p.cliente.nome if p.cliente else "-")
+        writer.writerow([f"A{p.id}", nome_cliente, "Aposentadoria",
+                         f"{p.valor_cobrado:.2f}", "Sim" if p.pago else "Não",
+                         p.status, p.data_cadastro.strftime("%d/%m/%Y") if p.data_cadastro else ""])
     output.seek(0)
     return StreamingResponse(
         iter([output.getvalue()]),
