@@ -83,8 +83,10 @@ def executar_migracoes():
             if "nome_cliente" in colunas_pos:
                 try:
                     conn.execute(text("DROP TABLE pedidos_aposentadoria"))
+                    conn.commit()
                 except OperationalError:
                     pass
+                inspector = inspect(engine)
 
         if not inspector.has_table("pedidos_aposentadoria"):
             try:
