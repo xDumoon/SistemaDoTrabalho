@@ -838,7 +838,23 @@
         function renderizarClientes(lista,isPendente=false){
             const div=document.getElementById('clientesLista');
             if(!lista.length){div.innerHTML='<div class="empty-state"><i class="bi bi-people"></i><p>Nenhum cliente.</p></div>';return;}
-            div.innerHTML=lista.map(c=>`<div class="cliente-card ${isPendente?'pendente':''}"><div class="cliente-info"><strong>${esc(c.nome)}</strong> <small class="text-muted">${esc(c.cpf)}</small><br><small class="text-muted">${esc(c.telefone)}${c.email?' | '+esc(c.email):''}</small></div><div class="cliente-acoes"><button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button><button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button><button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button></div></div>`).join('');
+            div.innerHTML=lista.map(c=>{
+                const tel=c.telefone?`<i class="bi bi-telephone me-1"></i>${esc(c.telefone)}`:'';
+                const email=c.email?`<i class="bi bi-envelope me-1"></i>${esc(c.email)}`:'';
+                const contato=tel||email?tel+(email?' | '+email:''):'';
+                return `<div class="cliente-card ${isPendente?'pendente':''}">
+                    <div class="cliente-info">
+                        <strong>${esc(c.nome)}</strong> <small class="text-muted">${formatarCPF(c.cpf)}</small><br>
+                        <small class="text-muted">${contato}</small><br>
+                        <small class="text-muted">${c.data_nascimento?'Nasc: '+esc(c.data_nascimento):''}</small>
+                    </div>
+                    <div class="cliente-acoes">
+                        <button class="btn btn-sm btn-outline-info" onclick="abrirHistorico(${c.id})" title="Histórico"><i class="bi bi-eye"></i></button>
+                        <button class="btn btn-sm btn-outline-warning" onclick="editarCliente(${c.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="excluirCliente(${c.id})"><i class="bi bi-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
         }
         function filtrarClientes(modo){
             filtroClientes=modo;
@@ -994,16 +1010,15 @@
                 if(!f.length){div.innerHTML='<p class="text-muted mb-0">Nenhum empréstimo.</p>';return;}
                 div.innerHTML=f.map(e=>{
                     const val=fmtVal(e.valor);
-                    const com=e.comissao>0?`Comissão: ${fmtVal(e.comissao)}`:'';
-                    const cli=e.cliente_nome?`<small class="text-muted">${esc(e.cliente_nome)}</small>`:'';
-                    return `<div class="item-row">
-                        <div class="item-info">
-                            <strong>${esc(e.banco)}</strong> ${cli} - ${val} (${e.parcelas}x)
-                            ${com?`<br><small class="text-success">${com}</small>`:''}
-                            <br><span class="badge badge-${e.status==='Concluído'?'concluido':'pendente'}">${esc(e.status)}</span>
-                            <small class="text-muted ms-2">${fmtData(e.data_cadastro)}</small>
+                    const com=e.comissao>0?` | Comissão: ${fmtVal(e.comissao)}`:'';
+                    const statusBadge=e.status==='Concluído'?'badge-concluido':'badge-nao-pago';
+                    return `<div class="cliente-card">
+                        <div class="cliente-info">
+                            <strong>${esc(e.cliente_nome||'-')}</strong> <small class="text-muted">${esc(e.banco)}</small> <strong>${val}</strong> <span class="badge ${statusBadge}">${esc(e.status)}</span><br>
+                            <small class="text-muted">${e.parcelas}x${com}</small><br>
+                            <small class="text-muted">${fmtData(e.data_cadastro)}</small>
                         </div>
-                        <div class="item-acoes">
+                        <div class="cliente-acoes">
                             ${e.status==='Pendente'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirEmprestimo(${e.id})" title="Concluir"><i class="bi bi-check-lg"></i></button>`:''}
                             <button class="btn btn-sm btn-outline-warning btn-action" onclick="editarEmprestimo(${e.id})" title="Editar"><i class="bi bi-pencil"></i></button>
                             <button class="btn btn-sm btn-outline-danger btn-action" onclick="excluirEmprestimoItem(${e.id})" title="Excluir"><i class="bi bi-trash"></i></button>
