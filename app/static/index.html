@@ -627,7 +627,7 @@
                     <input type="hidden" id="editPosId">
                     <div class="mb-3"><label class="form-label">Cliente</label><select class="form-select" id="editPosCliId" required></select></div>
                     <div class="mb-3"><label class="form-label">Valor Cobrado (R$)</label><input type="number" step="0.01" class="form-control" id="editPosValor"></div>
-                    <div class="mb-3"><form-check><input class="form-check-input" type="checkbox" id="editPosPago"><label class="form-check-label" for="editPosPago">Já pago</label></form-check></div>
+                    <div class="mb-3"><div class="form-check"><input class="form-check-input" type="checkbox" id="editPosPago"><label class="form-check-label" for="editPosPago">Já pago</label></div></div>
                     <div class="mb-3"><label class="form-label">Observações</label><input class="form-control" id="editPosObs"></div>
                     <div class="mb-3"><label class="form-label">Status</label>
                         <select class="form-select" id="editPosStatus">
@@ -1169,7 +1169,7 @@
                 else posDiv.innerHTML=h.pedidos_aposentadoria.map(p=>{
                     const val=p.valor_cobrado>0?`<strong>${fmtVal(p.valor_cobrado)}</strong> <span class="badge ${p.pago?'badge-pago':'badge-nao-pago'}">${p.pago?'PAGO':'DEVENDO'}</span>`:'';
                     return `<div class="item-row">
-                        <div class="item-info">${val} <span class="badge badge-${p.status==='Concluído'?'concluido':'pendente'}">${esc(p.status)}</span>${p.observacoes?'<br><small class="text-muted"><i class="bi bi-chat-dots me-1"></i>'+esc(p.observacoes)}</small>':''}<br><small class="text-muted">${fmtData(p.data_cadastro)}</small></div>
+                        <div class="item-info">${val} <span class="badge badge-${p.status==='Concluído'?'concluido':'pendente'}">${esc(p.status)}</span>${p.observacoes?'<br><small class="text-muted"><i class="bi bi-chat-dots me-1"></i>'+esc(p.observacoes)+'</small>':''}<br><small class="text-muted">${fmtData(p.data_cadastro)}</small></div>
                         <div class="item-acoes">
                             ${p.status!=='Concluído'?`<button class="btn btn-sm btn-outline-success btn-action" onclick="concluirPosModal(${p.id},${id})"><i class="bi bi-check-lg"></i></button>`:''}
                             ${!p.pago&&p.valor_cobrado>0?`<button class="btn btn-sm btn-outline-primary btn-action" onclick="pagarPosModal(${p.id},${id})"><i class="bi bi-cash"></i></button>`:''}
@@ -1352,6 +1352,7 @@
                 <div class="footer">Credmax - Sistema de Gestão | Gerado em ${new Date().toLocaleString('pt-BR')}</div>
                 <button class="print-btn" onclick="window.print()">🖨 Salvar como PDF</button>
 
+                <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"><\/script>
                 <script>
                     const labels = ${JSON.stringify(receita.map(r=>r.tipo))};
                     const recebido = ${JSON.stringify(receita.map(r=>r.recebido))};
