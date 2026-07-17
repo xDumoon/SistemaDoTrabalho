@@ -63,7 +63,8 @@ def listar_clientes_pendentes(
     for c in clientes:
         tem_servico = any(s.status == "Pendente" for s in c.servicos)
         tem_emprestimo = any(e.status == "Pendente" for e in c.emprestimos)
-        if tem_servico or tem_emprestimo:
+        tem_pos = any(p.status == "Pendente" for p in db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.cliente_id == c.id).all())
+        if tem_servico or tem_emprestimo or tem_pos:
             resultado.append({"id": c.id, "nome": c.nome, "cpf": c.cpf})
     return resultado
 

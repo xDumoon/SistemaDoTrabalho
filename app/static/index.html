@@ -431,7 +431,7 @@
                         <select class="filtro-select" id="filtroPosStatus" onchange="carregarPedidosApos()">
                             <option value="todos">Todos</option>
                             <option value="Pendente">Pendentes</option>
-                            <option value="Em andamento">Em andamento</option>
+
                             <option value="Concluído">Concluídos</option>
                         </select>
                     </div>
@@ -632,7 +632,7 @@
                     <div class="mb-3"><label class="form-label">Status</label>
                         <select class="form-select" id="editPosStatus">
                             <option value="Pendente">Pendente</option>
-                            <option value="Em andamento">Em andamento</option>
+
                             <option value="Concluído">Concluído</option>
                         </select>
                     </div>
@@ -1092,7 +1092,7 @@
                 const div=document.getElementById('pedidosAposLista');
                 if(!filtrados.length){div.innerHTML='<p class="text-muted mb-0">Nenhum pedido encontrado.</p>';return;}
                 div.innerHTML=filtrados.map(p=>{
-                    const statusBadge=p.status==='Concluído'?'badge-concluido':p.status==='Em andamento'?'badge-pago':'badge-nao-pago';
+                    const statusBadge=p.status==='Concluído'?'badge-concluido':'badge-nao-pago';
                     const val=p.valor_cobrado>0?`<strong>${fmtVal(p.valor_cobrado)}</strong> <span class="badge ${p.pago?'badge-pago':'badge-nao-pago'}">${p.pago?'PAGO':'DEVENDO'}</span>`:'';
                     return `<div class="cliente-card">
                         <div class="cliente-info">
