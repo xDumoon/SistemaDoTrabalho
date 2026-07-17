@@ -286,6 +286,7 @@
                 <div class="nav-item"><a class="nav-link" data-page="clientes"><i class="bi bi-people"></i> Clientes</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="servicos"><i class="bi bi-gear"></i> Serviços INSS</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="emprestimos"><i class="bi bi-cash-stack"></i> Empréstimos</a></div>
+                <div class="nav-item"><a class="nav-link" data-page="aposentadoria"><i class="bi bi-file-earmark-person"></i> Aposentadoria</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="receita"><i class="bi bi-graph-up-arrow"></i> Minha Receita</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="relatorios"><i class="bi bi-file-earmark-bar-graph"></i> Relatórios</a></div>
                 <div class="nav-item"><a class="nav-link" data-page="logs"><i class="bi bi-clock-history"></i> Auditoria</a></div>
@@ -402,6 +403,32 @@
                         </select>
                     </div>
                     <div class="card-body" id="emprestimosLista"><p class="text-muted mb-0">Carregando...</p></div>
+                </div>
+            </div>
+
+            <!-- APOSENTADORIA -->
+            <div id="page-aposentadoria" class="section-page">
+                <div class="form-section">
+                    <h5>Novo Pedido de Aposentadoria</h5>
+                    <form id="formPedidoApos" class="row g-2">
+                        <div class="col-md-3"><input class="form-control" id="posNome" placeholder="Nome do cliente" required></div>
+                        <div class="col-md-2"><input class="form-control" id="posCpf" placeholder="CPF" required></div>
+                        <div class="col-md-2"><input class="form-control" id="posTel" placeholder="Telefone"></div>
+                        <div class="col-md-3"><input class="form-control" id="posObs" placeholder="Observações"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Salvar</button></div>
+                    </form>
+                </div>
+                <div class="card-custom card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-file-earmark-person me-2"></i>Pedidos de Aposentadoria</span>
+                        <select class="filtro-select" id="filtroPosStatus" onchange="carregarPedidosApos()">
+                            <option value="todos">Todos</option>
+                            <option value="Pendente">Pendentes</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Concluído">Concluídos</option>
+                        </select>
+                    </div>
+                    <div class="card-body" id="pedidosAposLista"><p class="text-muted mb-0">Carregando...</p></div>
                 </div>
             </div>
 
@@ -582,6 +609,33 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR PEDIDO APOSENTADORIA -->
+    <div class="modal fade modal-custom" id="modalEditarPedidoApos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header"><h5 class="modal-title">Editar Pedido</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+                <div class="modal-body">
+                    <input type="hidden" id="editPosId">
+                    <div class="mb-3"><label class="form-label">Nome do Cliente</label><input class="form-control" id="editPosNome" required></div>
+                    <div class="mb-3"><label class="form-label">CPF</label><input class="form-control" id="editPosCpf" required></div>
+                    <div class="mb-3"><label class="form-label">Telefone</label><input class="form-control" id="editPosTel"></div>
+                    <div class="mb-3"><label class="form-label">Observações</label><input class="form-control" id="editPosObs"></div>
+                    <div class="mb-3"><label class="form-label">Status</label>
+                        <select class="form-select" id="editPosStatus">
+                            <option value="Pendente">Pendente</option>
+                            <option value="Em andamento">Em andamento</option>
+                            <option value="Concluído">Concluído</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="salvarEditarPedidoApos()"><i class="bi bi-check-lg me-1"></i>Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL ALTERAR SENHA -->
     <div class="modal fade modal-custom" id="modalAlterarSenha" tabindex="-1">
         <div class="modal-dialog">
@@ -704,13 +758,14 @@
                 document.querySelectorAll('.section-page').forEach(p=>p.classList.remove('active'));
                 const el=document.getElementById(`page-${page}`);
                 if(el)el.classList.add('active');
-                const titles={dashboard:'Dashboard',clientes:'Clientes',servicos:'Serviços INSS',emprestimos:'Empréstimos',receita:'Minha Receita',relatorios:'Relatórios',logs:'Auditoria',usuarios:'Usuários'};
+                const titles={dashboard:'Dashboard',clientes:'Clientes',servicos:'Serviços INSS',emprestimos:'Empréstimos',aposentadoria:'Aposentadoria',receita:'Minha Receita',relatorios:'Relatórios',logs:'Auditoria',usuarios:'Usuários'};
                 document.getElementById('pageTitle').textContent=titles[page]||page;
                 document.getElementById('sidebar').classList.remove('show');
                 if(page==='dashboard') carregarDashboard();
                 if(page==='clientes') carregarClientes();
                 if(page==='servicos') carregarServicos();
                 if(page==='emprestimos') carregarEmprestimos();
+                if(page==='aposentadoria') carregarPedidosApos();
                 if(page==='receita') carregarReceita('total');
                 if(page==='relatorios') carregarRelatorios();
                 if(page==='logs') carregarLogs();
@@ -980,6 +1035,71 @@
                 bootstrap.Modal.getInstance(document.getElementById('modalEditarEmprestimo')).hide();
                 toast('Empréstimo atualizado!');carregarEmprestimos();carregarDashboard();
             }catch(err){toast(err.message,'error');}
+        }
+
+        // APOSENTADORIA
+        document.getElementById('formPedidoApos').addEventListener('submit',async(e)=>{
+            e.preventDefault();
+            try{
+                await api('POST','/pedidos-aposentadoria/',{nome_cliente:document.getElementById('posNome').value,cpf:document.getElementById('posCpf').value,telefone:document.getElementById('posTel').value||null,observacoes:document.getElementById('posObs').value||null});
+                document.getElementById('formPedidoApos').reset();
+                toast('Pedido cadastrado!');carregarPedidosApos();
+            }catch(err){toast(err.message,'error');}
+        });
+        async function carregarPedidosApos(){
+            try{
+                const lista=await api('GET','/pedidos-aposentadoria/');
+                const filtro=document.getElementById('filtroPosStatus').value;
+                const filtrados=filtro==='todos'?lista:lista.filter(p=>p.status===filtro);
+                const div=document.getElementById('pedidosAposLista');
+                if(!filtrados.length){div.innerHTML='<p class="text-muted mb-0">Nenhum pedido encontrado.</p>';return;}
+                div.innerHTML=filtrados.map(p=>{
+                    const statusBadge=p.status==='Concluído'?'badge-concluido':p.status==='Em andamento'?'badge-pago':'badge-nao-pago';
+                    return `<div class="cliente-card">
+                        <div class="cliente-info">
+                            <strong>${esc(p.nome_cliente)}</strong> <small class="text-muted">${formatarCPF(p.cpf)}</small><br>
+                            <small class="text-muted">${p.telefone?'<i class="bi bi-telephone me-1"></i>'+esc(p.telefone):''}${p.observacoes?' | <i class="bi bi-chat-dots me-1"></i>'+esc(p.observacoes):''}</small><br>
+                            <small class="text-muted">${fmtData(p.data_cadastro)}</small> <span class="badge ${statusBadge}">${esc(p.status)}</span>
+                        </div>
+                        <div class="cliente-acoes">
+                            <button class="btn btn-sm btn-outline-warning" onclick="editarPedidoApos(${p.id})" title="Editar"><i class="bi bi-pencil"></i></button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="excluirPedidoApos(${p.id})" title="Excluir"><i class="bi bi-trash"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
+            }catch(err){if(TOKEN)toast('Erro ao carregar pedidos','error');}
+        }
+        async function editarPedidoApos(id){
+            try{
+                const lista=await api('GET','/pedidos-aposentadoria/');
+                const p=lista.find(x=>x.id===id);
+                if(!p)return;
+                document.getElementById('editPosId').value=p.id;
+                document.getElementById('editPosNome').value=p.nome_cliente;
+                document.getElementById('editPosCpf').value=p.cpf;
+                document.getElementById('editPosTel').value=p.telefone||'';
+                document.getElementById('editPosObs').value=p.observacoes||'';
+                document.getElementById('editPosStatus').value=p.status;
+                new bootstrap.Modal(document.getElementById('modalEditarPedidoApos')).show();
+            }catch(err){toast(err.message,'error');}
+        }
+        async function salvarEditarPedidoApos(){
+            try{
+                const id=document.getElementById('editPosId').value;
+                await api('PUT',`/pedidos-aposentadoria/${id}`,{
+                    nome_cliente:document.getElementById('editPosNome').value,
+                    cpf:document.getElementById('editPosCpf').value,
+                    telefone:document.getElementById('editPosTel').value||null,
+                    observacoes:document.getElementById('editPosObs').value||null,
+                    status:document.getElementById('editPosStatus').value
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalEditarPedidoApos')).hide();
+                toast('Pedido atualizado!');carregarPedidosApos();
+            }catch(err){toast(err.message,'error');}
+        }
+        async function excluirPedidoApos(id){
+            if(!confirm('Excluir este pedido?'))return;
+            try{await api('DELETE',`/pedidos-aposentadoria/${id}`);toast('Excluído.');carregarPedidosApos();}catch(err){toast(err.message,'error');}
         }
 
         // HISTÓRICO MODAL

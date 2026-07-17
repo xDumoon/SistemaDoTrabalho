@@ -174,3 +174,38 @@ class LogResponse(BaseModel):
     data_hora: datetime
 
     model_config = {"from_attributes": True}
+
+
+class PedidoAposentadoriaCreate(BaseModel):
+    nome_cliente: str = Field(..., min_length=1, max_length=200)
+    cpf: str = Field(..., min_length=11, max_length=14)
+    telefone: str | None = Field(None, max_length=20)
+    observacoes: str | None = Field(None, max_length=2000)
+
+    @field_validator("cpf")
+    @classmethod
+    def validar_cpf(cls, cpf: str) -> str:
+        cpf = cpf.replace(".", "").replace("-", "").strip()
+        if not cpf.isdigit() or len(cpf) != 11:
+            raise ValueError("CPF deve ter 11 dígitos numéricos")
+        return cpf
+
+
+class PedidoAposentadoriaUpdate(BaseModel):
+    nome_cliente: str | None = Field(None, max_length=200)
+    cpf: str | None = Field(None, max_length=14)
+    telefone: str | None = Field(None, max_length=20)
+    observacoes: str | None = Field(None, max_length=2000)
+    status: str | None = None
+
+
+class PedidoAposentadoriaResponse(BaseModel):
+    id: int
+    nome_cliente: str
+    cpf: str
+    telefone: str | None
+    observacoes: str | None
+    status: str
+    data_cadastro: datetime | None
+
+    model_config = {"from_attributes": True}

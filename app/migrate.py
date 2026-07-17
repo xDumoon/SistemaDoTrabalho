@@ -78,4 +78,21 @@ def executar_migracoes():
                 except OperationalError:
                     pass
 
+        if not inspector.has_table("pedidos_aposentadoria"):
+            try:
+                conn.execute(text("""
+                    CREATE TABLE pedidos_aposentadoria (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        usuario_id INTEGER REFERENCES usuarios(id),
+                        nome_cliente VARCHAR NOT NULL,
+                        cpf VARCHAR NOT NULL,
+                        telefone VARCHAR,
+                        observacoes TEXT,
+                        status VARCHAR DEFAULT 'Pendente',
+                        data_cadastro TIMESTAMP
+                    )
+                """))
+            except OperationalError:
+                pass
+
         conn.commit()

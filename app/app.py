@@ -9,7 +9,7 @@ from app.models import UsuarioDB
 from app.auth import hash_password, verificar_password
 from app.database import SessionLocal
 from app.migrate import executar_migracoes
-from app.routers import auth_router, clientes, servicos, emprestimos, dashboard
+from app.routers import auth_router, clientes, servicos, emprestimos, dashboard, pedidos_aposentadoria
 
 app = FastAPI(title="Credmax - Sistema de Gestão", version="2.0.0")
 
@@ -60,3 +60,4 @@ app.include_router(clientes.router)
 app.include_router(servicos.router)
 app.include_router(emprestimos.router)
 app.include_router(dashboard.router)
+app.include_router(pedidos_aposentadoria.router)

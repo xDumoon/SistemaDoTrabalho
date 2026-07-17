@@ -81,3 +81,18 @@ class LogDB(Base):
     entidade_id = Column(Integer, nullable=True)
     detalhes = Column(Text, nullable=True)
     data_hora = Column(DateTime, default=datetime.utcnow)
+
+
+class PedidoAposentadoriaDB(Base):
+    __tablename__ = "pedidos_aposentadoria"
+
+    id = Column(Integer, primary_key=True, index=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
+    nome_cliente = Column(String, nullable=False)
+    cpf = Column(String, nullable=False)
+    telefone = Column(String, nullable=True)
+    observacoes = Column(Text, nullable=True)
+    status = Column(String, default="Pendente")
+    data_cadastro = Column(DateTime, default=datetime.utcnow)
+
+    usuario = relationship("UsuarioDB")
