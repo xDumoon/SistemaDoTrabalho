@@ -6,7 +6,7 @@ from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from app.database import get_db
-from app.models import ClienteDB, ServicoDB, EmprestimoDB, LogDB, UsuarioDB
+from app.models import ClienteDB, ServicoDB, EmprestimoDB, PedidoAposentadoriaDB, LogDB, UsuarioDB
 from app.schemas import DashboardResponse, LogResponse
 from app.auth import get_current_user
 
@@ -32,14 +32,19 @@ def obter_dashboard(
     if eh_admin:
         emp_query = db.query(EmprestimoDB)
         serv_query = db.query(ServicoDB)
+        pos_query = db.query(PedidoAposentadoriaDB)
     else:
         emp_query = db.query(EmprestimoDB).filter(EmprestimoDB.usuario_id == usuario.id)
         serv_query = db.query(ServicoDB).filter(ServicoDB.usuario_id == usuario.id)
+        pos_query = db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.usuario_id == usuario.id)
 
     servicos_pend = serv_query.filter(ServicoDB.status == "Pendente").count()
     emprestimos_pend = emp_query.filter(EmprestimoDB.status == "Pendente").count()
     emprestimos_conc = emp_query.filter(EmprestimoDB.status == "Concluído").count()
     total_emprestimos = emp_query.with_entities(func.sum(EmprestimoDB.valor)).scalar() or 0.0
+
+    apos_pend = pos_query.filter(PedidoAposentadoriaDB.status == "Pendente").count()
+    apos_conc = pos_query.filter(PedidoAposentadoriaDB.status == "Concluído").count()
 
     trinta_dias_atras = datetime.utcnow() - timedelta(days=30)
 
@@ -72,20 +77,38 @@ def obter_dashboard(
         ServicoDB.valor_cobrado > 0
     ).with_entities(func.sum(ServicoDB.valor_cobrado)).scalar() or 0.0
 
+    apos_recebido_mes = pos_query.filter(
+        PedidoAposentadoriaDB.pago == True,
+        PedidoAposentadoriaDB.data_cadastro >= trinta_dias_atras
+    ).with_entities(func.sum(PedidoAposentadoriaDB.valor_cobrado)).scalar() or 0.0
+
+    apos_recebido_total = pos_query.filter(
+        PedidoAposentadoriaDB.pago == True
+    ).with_entities(func.sum(PedidoAposentadoriaDB.valor_cobrado)).scalar() or 0.0
+
+    apos_a_receber = pos_query.filter(
+        PedidoAposentadoriaDB.pago == False,
+        PedidoAposentadoriaDB.valor_cobrado > 0
+    ).with_entities(func.sum(PedidoAposentadoriaDB.valor_cobrado)).scalar() or 0.0
+
     return DashboardResponse(
         total_clientes=total_clientes,
         servicos_pendentes=servicos_pend,
         emprestimos_pendentes=emprestimos_pend,
-        pendencias_totais=servicos_pend + emprestimos_pend,
+        pendencias_totais=servicos_pend + emprestimos_pend + apos_pend,
         total_emprestimos=total_emprestimos,
         total_emprestimos_mes=total_emp_mes,
         emprestimos_concluidos=emprestimos_conc,
         comissao_total=comissao_total,
         comissao_mes=comissao_mes,
-        receita_servicos_mes=receita_mes,
-        receita_servicos_total=receita_total,
+        receita_servicos_mes=receita_mes + apos_recebido_mes,
+        receita_servicos_total=receita_total + apos_recebido_total,
         servicos_pagos_mes=servicos_pagos_mes,
-        servicos_a_receber=a_receber,
+        servicos_a_receber=a_receber + apos_a_receber,
+        pedidos_apos_pendentes=apos_pend,
+        pedidos_apos_concluidos=apos_conc,
+        pedidos_apos_recebido_mes=apos_recebido_mes,
+        pedidos_apos_recebido_total=apos_recebido_total,
     )
 
 

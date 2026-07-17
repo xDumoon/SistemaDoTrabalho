@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
@@ -29,9 +30,12 @@ def _to_response(pedido):
         cliente_nome=c.nome if c else None,
         cliente_cpf=c.cpf if c else None,
         cliente_telefone=c.telefone if c else None,
+        valor_cobrado=pedido.valor_cobrado or 0.0,
+        pago=pedido.pago or False,
         observacoes=pedido.observacoes,
         status=pedido.status,
         data_cadastro=pedido.data_cadastro,
+        data_conclusao=pedido.data_conclusao,
     )
 
 
@@ -48,7 +52,10 @@ def criar_pedido(
     db.add(novo)
     db.commit()
     db.refresh(novo)
-    registrar_log(db, usuario, "criar", "pedido_aposentadoria", novo.id, f"Pedido: {cliente.nome}")
+    detalhes = f"Pedido aposentadoria: {cliente.nome}"
+    if novo.valor_cobrado > 0:
+        detalhes += f" - R${novo.valor_cobrado:.2f} {'(PAGO)' if novo.pago else '(PENDENTE)'}"
+    registrar_log(db, usuario, "criar", "pedido_aposentadoria", novo.id, detalhes)
     return _to_response(novo)
 
 
@@ -78,6 +85,10 @@ def atualizar_pedido(
         if not cliente:
             raise HTTPException(status_code=404, detail="Cliente não encontrado")
         pedido.cliente_id = dados.cliente_id
+    if dados.valor_cobrado is not None:
+        pedido.valor_cobrado = dados.valor_cobrado
+    if dados.pago is not None:
+        pedido.pago = dados.pago
     if dados.observacoes is not None:
         pedido.observacoes = dados.observacoes
     if dados.status is not None:
@@ -86,6 +97,41 @@ def atualizar_pedido(
     db.refresh(pedido)
     c = pedido.cliente
     registrar_log(db, usuario, "atualizar", "pedido_aposentadoria", pedido.id, f"Pedido atualizado: {c.nome if c else '-'}")
+    return _to_response(pedido)
+
+
+@router.put("/{pedido_id}/concluir", response_model=PedidoAposentadoriaResponse)
+def concluir_pedido(
+    pedido_id: int,
+    db: Session = Depends(get_db),
+    usuario: UsuarioDB = Depends(get_current_user),
+):
+    pedido = db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    pedido.status = "Concluído"
+    pedido.data_conclusao = datetime.utcnow()
+    db.commit()
+    db.refresh(pedido)
+    c = pedido.cliente
+    registrar_log(db, usuario, "concluir", "pedido_aposentadoria", pedido.id, f"Pedido concluído: {c.nome if c else '-'}")
+    return _to_response(pedido)
+
+
+@router.put("/{pedido_id}/pagar", response_model=PedidoAposentadoriaResponse)
+def marcar_pago(
+    pedido_id: int,
+    db: Session = Depends(get_db),
+    usuario: UsuarioDB = Depends(get_current_user),
+):
+    pedido = db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.id == pedido_id).first()
+    if not pedido:
+        raise HTTPException(status_code=404, detail="Pedido não encontrado")
+    pedido.pago = True
+    db.commit()
+    db.refresh(pedido)
+    c = pedido.cliente
+    registrar_log(db, usuario, "pagar", "pedido_aposentadoria", pedido.id, f"Pedido pago: {c.nome if c else '-'} R${pedido.valor_cobrado:.2f}")
     return _to_response(pedido)
 
 

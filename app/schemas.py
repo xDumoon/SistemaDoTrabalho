@@ -162,6 +162,10 @@ class DashboardResponse(BaseModel):
     receita_servicos_total: float
     servicos_pagos_mes: float
     servicos_a_receber: float
+    pedidos_apos_pendentes: int = 0
+    pedidos_apos_concluidos: int = 0
+    pedidos_apos_recebido_mes: float = 0.0
+    pedidos_apos_recebido_total: float = 0.0
 
 
 class LogResponse(BaseModel):
@@ -178,11 +182,15 @@ class LogResponse(BaseModel):
 
 class PedidoAposentadoriaCreate(BaseModel):
     cliente_id: int
+    valor_cobrado: float = Field(default=0.0, ge=0)
+    pago: bool = False
     observacoes: str | None = Field(None, max_length=2000)
 
 
 class PedidoAposentadoriaUpdate(BaseModel):
     cliente_id: int | None = None
+    valor_cobrado: float | None = Field(None, ge=0)
+    pago: bool | None = None
     observacoes: str | None = Field(None, max_length=2000)
     status: str | None = None
 
@@ -193,8 +201,11 @@ class PedidoAposentadoriaResponse(BaseModel):
     cliente_nome: str | None = None
     cliente_cpf: str | None = None
     cliente_telefone: str | None = None
+    valor_cobrado: float
+    pago: bool
     observacoes: str | None
     status: str
     data_cadastro: datetime | None
+    data_conclusao: datetime | None
 
     model_config = {"from_attributes": True}

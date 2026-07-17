@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import ClienteDB, LogDB, UsuarioDB
+from app.models import ClienteDB, LogDB, UsuarioDB, PedidoAposentadoriaDB
 from app.schemas import ClienteCreate, ClienteUpdate, ClienteResponse
 from app.auth import get_current_user
 
@@ -159,4 +159,16 @@ def ver_historico_cliente(
         "observacoes": cliente.observacoes,
         "servicos": servicos,
         "emprestimos": emprestimos,
+        "pedidos_aposentadoria": [
+            {
+                "id": p.id,
+                "valor_cobrado": p.valor_cobrado or 0,
+                "pago": p.pago or False,
+                "observacoes": p.observacoes,
+                "status": p.status,
+                "data_cadastro": p.data_cadastro.isoformat() if p.data_cadastro else None,
+                "data_conclusao": p.data_conclusao.isoformat() if p.data_conclusao else None,
+            }
+            for p in db.query(PedidoAposentadoriaDB).filter(PedidoAposentadoriaDB.cliente_id == cliente_id).order_by(PedidoAposentadoriaDB.id.desc()).all()
+        ],
     }

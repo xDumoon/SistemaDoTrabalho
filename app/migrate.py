@@ -80,7 +80,7 @@ def executar_migracoes():
 
         if inspector.has_table("pedidos_aposentadoria"):
             colunas_pos = [c["name"] for c in inspector.get_columns("pedidos_aposentadoria")]
-            if "nome_cliente" in colunas_pos:
+            if "nome_cliente" in colunas_pos or "valor_cobrado" not in colunas_pos:
                 try:
                     conn.execute(text("DROP TABLE pedidos_aposentadoria"))
                     conn.commit()
@@ -95,9 +95,12 @@ def executar_migracoes():
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         usuario_id INTEGER REFERENCES usuarios(id),
                         cliente_id INTEGER NOT NULL REFERENCES clientes(id),
+                        valor_cobrado FLOAT DEFAULT 0.0,
+                        pago BOOLEAN DEFAULT 0,
                         observacoes TEXT,
                         status VARCHAR DEFAULT 'Pendente',
-                        data_cadastro TIMESTAMP
+                        data_cadastro TIMESTAMP,
+                        data_conclusao TIMESTAMP
                     )
                 """))
             except OperationalError:
