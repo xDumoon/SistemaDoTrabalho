@@ -88,11 +88,10 @@ class PedidoAposentadoriaDB(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=True, index=True)
-    nome_cliente = Column(String, nullable=False)
-    cpf = Column(String, nullable=False)
-    telefone = Column(String, nullable=True)
+    cliente_id = Column(Integer, ForeignKey("clientes.id"), nullable=False, index=True)
     observacoes = Column(Text, nullable=True)
     status = Column(String, default="Pendente")
     data_cadastro = Column(DateTime, default=datetime.utcnow)
 
+    cliente = relationship("ClienteDB")
     usuario = relationship("UsuarioDB")

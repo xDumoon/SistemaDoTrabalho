@@ -411,11 +411,10 @@
                 <div class="form-section">
                     <h5>Novo Pedido de Aposentadoria</h5>
                     <form id="formPedidoApos" class="row g-2">
-                        <div class="col-md-3"><input class="form-control" id="posNome" placeholder="Nome do cliente" required></div>
-                        <div class="col-md-2"><input class="form-control" id="posCpf" placeholder="CPF" required></div>
-                        <div class="col-md-2"><input class="form-control" id="posTel" placeholder="Telefone"></div>
-                        <div class="col-md-3"><input class="form-control" id="posObs" placeholder="Observações"></div>
-                        <div class="col-md-2"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Salvar</button></div>
+                        <div class="col-md-3"><select class="form-select" id="posCliId" required><option value="">Selecionar cliente...</option></select></div>
+                        <div class="col-md-2"><input class="form-control" id="posCliInfo" placeholder="CPF / Tel" disabled></div>
+                        <div class="col-md-4"><input class="form-control" id="posObs" placeholder="Observações"></div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-primary w-100"><i class="bi bi-save me-1"></i>Salvar</button></div>
                     </form>
                 </div>
                 <div class="card-custom card">
@@ -616,9 +615,7 @@
                 <div class="modal-header"><h5 class="modal-title">Editar Pedido</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
                 <div class="modal-body">
                     <input type="hidden" id="editPosId">
-                    <div class="mb-3"><label class="form-label">Nome do Cliente</label><input class="form-control" id="editPosNome" required></div>
-                    <div class="mb-3"><label class="form-label">CPF</label><input class="form-control" id="editPosCpf" required></div>
-                    <div class="mb-3"><label class="form-label">Telefone</label><input class="form-control" id="editPosTel"></div>
+                    <div class="mb-3"><label class="form-label">Cliente</label><select class="form-select" id="editPosCliId" required></select></div>
                     <div class="mb-3"><label class="form-label">Observações</label><input class="form-control" id="editPosObs"></div>
                     <div class="mb-3"><label class="form-label">Status</label>
                         <select class="form-select" id="editPosStatus">
@@ -807,7 +804,7 @@
 
         // CLIENTES
         let filtroClientes='todos';
-        async function carregarClientes(){try{clientesGlobais=await api('GET','/clientes/');atualizarSelects();aplicarFiltro();}catch(e){toast('Erro','error');}}
+        async function carregarClientes(){try{clientesGlobais=await api('GET','/clientes/');atualizarSelects();popularSelectClientesApos();aplicarFiltro();}catch(e){toast('Erro','error');}}
         function aplicarFiltro(){
             if(filtroClientes==='todos') renderizarClientes(clientesGlobais);
             else if(filtroClientes==='pendentes') carregarPendentes();
@@ -1038,11 +1035,21 @@
         }
 
         // APOSENTADORIA
+        function popularSelectClientesApos(){
+            const sel=document.getElementById('posCliId');
+            if(!sel)return;
+            sel.innerHTML='<option value="">Selecionar cliente...</option>'+clientesGlobais.map(c=>`<option value="${c.id}">${esc(c.nome)} - ${formatarCPF(c.cpf)}</option>`).join('');
+            sel.onchange=function(){
+                const c=clientesGlobais.find(x=>x.id==this.value);
+                document.getElementById('posCliInfo').value=c?`${formatarCPF(c.cpf)}${c.telefone?' / '+c.telefone:''}`:'';
+            };
+        }
         document.getElementById('formPedidoApos').addEventListener('submit',async(e)=>{
             e.preventDefault();
             try{
-                await api('POST','/pedidos-aposentadoria/',{nome_cliente:document.getElementById('posNome').value,cpf:document.getElementById('posCpf').value,telefone:document.getElementById('posTel').value||null,observacoes:document.getElementById('posObs').value||null});
+                await api('POST','/pedidos-aposentadoria/',{cliente_id:parseInt(document.getElementById('posCliId').value),observacoes:document.getElementById('posObs').value||null});
                 document.getElementById('formPedidoApos').reset();
+                document.getElementById('posCliInfo').value='';
                 toast('Pedido cadastrado!');carregarPedidosApos();
             }catch(err){toast(err.message,'error');}
         });
@@ -1057,8 +1064,8 @@
                     const statusBadge=p.status==='Concluído'?'badge-concluido':p.status==='Em andamento'?'badge-pago':'badge-nao-pago';
                     return `<div class="cliente-card">
                         <div class="cliente-info">
-                            <strong>${esc(p.nome_cliente)}</strong> <small class="text-muted">${formatarCPF(p.cpf)}</small><br>
-                            <small class="text-muted">${p.telefone?'<i class="bi bi-telephone me-1"></i>'+esc(p.telefone):''}${p.observacoes?' | <i class="bi bi-chat-dots me-1"></i>'+esc(p.observacoes):''}</small><br>
+                            <strong>${esc(p.cliente_nome||'-')}</strong> <small class="text-muted">${formatarCPF(p.cliente_cpf||'')}</small><br>
+                            <small class="text-muted">${p.cliente_telefone?'<i class="bi bi-telephone me-1"></i>'+esc(p.cliente_telefone):''}${p.observacoes?' | <i class="bi bi-chat-dots me-1"></i>'+esc(p.observacoes):''}</small><br>
                             <small class="text-muted">${fmtData(p.data_cadastro)}</small> <span class="badge ${statusBadge}">${esc(p.status)}</span>
                         </div>
                         <div class="cliente-acoes">
@@ -1074,10 +1081,9 @@
                 const lista=await api('GET','/pedidos-aposentadoria/');
                 const p=lista.find(x=>x.id===id);
                 if(!p)return;
+                const sel=document.getElementById('editPosCliId');
+                sel.innerHTML=clientesGlobais.map(c=>`<option value="${c.id}" ${c.id===p.cliente_id?'selected':''}>${esc(c.nome)} - ${formatarCPF(c.cpf)}</option>`).join('');
                 document.getElementById('editPosId').value=p.id;
-                document.getElementById('editPosNome').value=p.nome_cliente;
-                document.getElementById('editPosCpf').value=p.cpf;
-                document.getElementById('editPosTel').value=p.telefone||'';
                 document.getElementById('editPosObs').value=p.observacoes||'';
                 document.getElementById('editPosStatus').value=p.status;
                 new bootstrap.Modal(document.getElementById('modalEditarPedidoApos')).show();
@@ -1087,9 +1093,7 @@
             try{
                 const id=document.getElementById('editPosId').value;
                 await api('PUT',`/pedidos-aposentadoria/${id}`,{
-                    nome_cliente:document.getElementById('editPosNome').value,
-                    cpf:document.getElementById('editPosCpf').value,
-                    telefone:document.getElementById('editPosTel').value||null,
+                    cliente_id:parseInt(document.getElementById('editPosCliId').value),
                     observacoes:document.getElementById('editPosObs').value||null,
                     status:document.getElementById('editPosStatus').value
                 });

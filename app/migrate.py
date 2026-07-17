@@ -78,15 +78,21 @@ def executar_migracoes():
                 except OperationalError:
                     pass
 
+        if inspector.has_table("pedidos_aposentadoria"):
+            colunas_pos = [c["name"] for c in inspector.get_columns("pedidos_aposentadoria")]
+            if "nome_cliente" in colunas_pos:
+                try:
+                    conn.execute(text("DROP TABLE pedidos_aposentadoria"))
+                except OperationalError:
+                    pass
+
         if not inspector.has_table("pedidos_aposentadoria"):
             try:
                 conn.execute(text("""
                     CREATE TABLE pedidos_aposentadoria (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
                         usuario_id INTEGER REFERENCES usuarios(id),
-                        nome_cliente VARCHAR NOT NULL,
-                        cpf VARCHAR NOT NULL,
-                        telefone VARCHAR,
+                        cliente_id INTEGER NOT NULL REFERENCES clientes(id),
                         observacoes TEXT,
                         status VARCHAR DEFAULT 'Pendente',
                         data_cadastro TIMESTAMP
